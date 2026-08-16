@@ -1,0 +1,218 @@
+"""
+FBR Invoice App — FastAPI entry point
+Wires up all routers. DB models and FBR service go in separate modules.
+"""
+
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+import uvicorn
+from routers import invoices
+
+app = FastAPI(title="InvoicePK — FBR Integrated", version="1.0.0")
+
+# Static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Templates
+templates = Jinja2Templates(directory="templates")
+
+
+# ── Routers (import once you scaffold each module) ──────────────────────────
+# from routers import auth, invoices, customers, products, reports, settings, fbr, tenants
+# app.include_router(auth.router,      prefix="/auth",      tags=["auth"])
+# app.include_router(tenants.router,   prefix="/tenants",   tags=["tenants"])
+#app.include_router(invoices.router,  prefix="/invoices",  tags=["invoices"])
+# app.include_router(customers.router, prefix="/customers", tags=["customers"])
+# app.include_router(products.router,  prefix="/products",  tags=["products"])
+# app.include_router(reports.router,   prefix="/reports",   tags=["reports"])
+# app.include_router(settings.router,  prefix="/settings",  tags=["settings"])
+# app.include_router(fbr.router,       prefix="/fbr",       tags=["fbr"])
+
+
+# ── Mock context helpers ─────────────────────────────────────────────────────
+def mock_user():
+    return {"name": "Ahmed Raza", "initials": "AR", "role": "Admin"}
+
+def mock_tenant():
+    return {
+        "id": 1,
+        "name": "Al-Baraka Trading Co.",
+        "initials": "AB",
+        "ntn": "1234567-8",
+        "strn": "12-34-5678-001-56",
+        "address": "Plot 14, SITE Area, Karachi, Sindh",
+        "phone": "+92 21 3456 7890",
+        "email": "accounts@albarakatrading.pk",
+        "fbr_connected": True,
+        "fbr_pos_id": "POS-12345",
+        "fbr_token": "tok_xxx",
+        "fbr_env": "production",
+        "fbr_retry_count": 5,
+        "bank_name": "HBL",
+        "bank_account": "01234567890103",
+        "bank_iban": "PK36SCBL0000001123456702",
+        "invoice_footer": "Thank you for your business.",
+        "business_type": "pvt_limited",
+        "website": "www.albarakatrading.pk",
+    }
+
+def mock_stats():
+    return {
+        "this_month_revenue": "Rs 8,42,500",
+        "mom_change": 12,
+        "invoices_this_month": 47,
+        "current_month": "July 2025",
+        "fbr_synced": 45,
+        "fbr_pending": 2,
+        "tax_collected": "Rs 1,26,375",
+        "avg_tax_rate": 17,
+    }
+
+def base_ctx(request: Request):
+    return {
+        "request": request,
+        "user": mock_user(),
+        "tenant": mock_tenant(),
+        "pending_fbr_count": 2,
+        "rejected_count": 1,
+        "rejected_fbr_count": 1,
+    }
+
+
+# ── Routes ───────────────────────────────────────────────────────────────────
+
+@app.get("/auth/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("auth/login.html", {"request": request, "error": None})
+
+@app.get("/auth/tenant-select", response_class=HTMLResponse)
+async def tenant_select(request: Request):
+    return templates.TemplateResponse("auth/tenant_select.html", {
+        "request": request,
+        "tenants": [
+            {"id": 1, "name": "Al-Baraka Trading Co.", "initials": "AB", "ntn": "1234567-8", "strn": "12-34-5678-001-56"},
+            {"id": 2, "name": "Zafar Textiles Pvt Ltd", "initials": "ZT", "ntn": "9876543-2", "strn": "98-76-5432-001-11"},
+        ]
+    })
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    ctx = base_ctx(request)
+    ctx["stats"] = mock_stats()
+    return templates.TemplateResponse("dashboard.html", ctx)
+
+@app.get("/invoices", response_class=HTMLResponse)
+async def invoices_list(request: Request):
+    return templates.TemplateResponse("invoices/list.html", base_ctx(request))
+
+@app.get("/invoices/partial", response_class=HTMLResponse)
+async def invoices_partial(request: Request, q: str = "", status: str = "", page: int = 1):
+    invoices = [
+        {"id": 1, "invoice_number": "INV-2025-047", "buyer_name": "Metro Cash & Carry", "buyer_ntn": "0021649-5", "invoice_date": "14 Jul 2025", "total_amount_fmt": "Rs 1,25,000", "tax_amount_fmt": "Rs 21,250", "fbr_status": "synced", "fbr_irn": "FBR-PK-2025-04729183"},
+        {"id": 2, "invoice_number": "INV-2025-046", "buyer_name": "Imtiaz Super Market", "buyer_ntn": "0031234-1", "invoice_date": "13 Jul 2025", "total_amount_fmt": "Rs 87,500", "tax_amount_fmt": "Rs 14,875", "fbr_status": "pending", "fbr_irn": None},
+        {"id": 3, "invoice_number": "INV-2025-045", "buyer_name": "Agha's Supermarket", "buyer_ntn": "0045678-3", "invoice_date": "12 Jul 2025", "total_amount_fmt": "Rs 2,10,000", "tax_amount_fmt": "Rs 35,700", "fbr_status": "synced", "fbr_irn": "FBR-PK-2025-04720011"},
+        {"id": 4, "invoice_number": "INV-2025-044", "buyer_name": "Walk-in Customer", "buyer_ntn": None, "invoice_date": "11 Jul 2025", "total_amount_fmt": "Rs 4,500", "tax_amount_fmt": "Rs 765", "fbr_status": "rejected", "fbr_irn": None},
+        {"id": 5, "invoice_number": "INV-2025-043", "buyer_name": "Naheed Super Market", "buyer_ntn": "0067891-7", "invoice_date": "10 Jul 2025", "total_amount_fmt": "Rs 3,40,000", "tax_amount_fmt": "Rs 57,800", "fbr_status": "pending", "fbr_irn": None},
+        {"id": 6, "invoice_number": "INV-2025-042", "buyer_name": "Hyperstar Pakistan", "buyer_ntn": "0078901-6", "invoice_date": "9 Jul 2025", "total_amount_fmt": "Rs 5,60,000", "tax_amount_fmt": "Rs 95,200", "fbr_status": "synced", "fbr_irn": "FBR-PK-2025-04710022"},
+        {"id": 7, "invoice_number": "INV-2025-041", "buyer_name": "Carrefour Pakistan", "buyer_ntn": "0089012-5", "invoice_date": "8 Jul 2025", "total_amount_fmt": "Rs 8,90,000", "tax_amount_fmt": "Rs 1,51,300", "fbr_status": "synced", "fbr_irn": "FBR-PK-2025-04700033"},
+        {"id": 8, "invoice_number": "INV-2025-040", "buyer_name": "Lucky One Mall", "buyer_ntn": None, "invoice_date": "7 Jul 2025", "total_amount_fmt": "Rs 22,000", "tax_amount_fmt": "Rs 3,740", "fbr_status": "draft", "fbr_irn": None},
+    ]
+    return templates.TemplateResponse("partials/invoices_table.html", {
+        "request": request,
+        "invoices": invoices,
+        "page": page,
+        "page_range": [1, 2, 3],
+        "has_next": page < 3,
+        "total": 47,
+    })
+
+@app.get("/invoices/new", response_class=HTMLResponse)
+async def new_invoice(request: Request):
+    from datetime import date
+    ctx = base_ctx(request)
+    ctx.update({"invoice": None, "next_invoice_number": "INV-2025-048", "today": date.today().isoformat()})
+    return templates.TemplateResponse("invoices/form.html", ctx)
+
+@app.get("/invoices/{invoice_id}", response_class=HTMLResponse)
+async def invoice_detail(request: Request, invoice_id: int):
+    ctx = base_ctx(request)
+    ctx["invoice"] = {
+        "id": invoice_id,
+        "invoice_number": f"INV-2025-0{invoice_id:02d}",
+        "buyer_name": "Metro Cash & Carry Pvt Ltd",
+        "buyer_ntn": "0021649-5",
+        "buyer_address": "Plot C-1, Hub River Road, Karachi",
+        "invoice_date": "14 July 2025",
+        "due_date": "13 Aug 2025",
+        "payment_terms_display": "Net 30 days",
+        "fbr_status": "synced",
+        "fbr_irn": "FBR-PK-2025-04729183",
+        "fbr_submitted_at": "14 Jul 2025, 11:42 AM",
+        "fbr_error": None,
+        "subtotal_fmt": "Rs 1,07,000",
+        "tax_amount_fmt": "Rs 18,190",
+        "total_amount_fmt": "Rs 1,25,190",
+        "notes": "Payment via HBL bank transfer.",
+        "items": [
+            {"description": "Basmati Rice 25kg Bag",  "hscode": "1006.30", "qty": 10, "unit_price_fmt": "Rs 4,500", "tax_amount_fmt": "Rs 7,650",  "total_fmt": "Rs 52,650"},
+            {"description": "Cooking Oil 5L (Dalda)", "hscode": "1507.90", "qty": 20, "unit_price_fmt": "Rs 1,800", "tax_amount_fmt": "Rs 6,120",  "total_fmt": "Rs 42,120"},
+            {"description": "Wheat Flour 10kg",       "hscode": "1101.00", "qty": 15, "unit_price_fmt": "Rs 1,200", "tax_amount_fmt": "Rs 3,060",  "total_fmt": "Rs 21,060"},
+        ],
+    }
+    return templates.TemplateResponse("invoices/detail.html", ctx)
+
+@app.get("/customers", response_class=HTMLResponse)
+async def customers_list(request: Request):
+    return templates.TemplateResponse("customers/list.html", base_ctx(request))
+
+@app.get("/customers/partial", response_class=HTMLResponse)
+async def customers_partial(request: Request, q: str = "", page: int = 1):
+    customers = [
+        {"id": 1, "name": "Metro Cash & Carry", "ntn": "0021649-5", "cnic": None, "phone": "+92 21 111-0000", "email": "procurement@metro.pk", "address": "Plot C-1, Hub River Road, Karachi", "invoice_count": 18, "total_billed_fmt": "Rs 24,50,000"},
+        {"id": 2, "name": "Imtiaz Super Market", "ntn": "0031234-1", "cnic": None, "phone": "+92 21 3456 7890", "email": "orders@imtiaz.pk", "address": "Tariq Road, Karachi", "invoice_count": 12, "total_billed_fmt": "Rs 15,20,000"},
+        {"id": 3, "name": "Agha's Supermarket",  "ntn": "0045678-3", "cnic": None, "phone": "+92 21 5678 9012", "email": None, "address": "DHA Phase 5, Karachi", "invoice_count": 9, "total_billed_fmt": "Rs 11,80,000"},
+        {"id": 4, "name": "Walk-in Customer", "ntn": None, "cnic": "42201-1234567-8", "phone": None, "email": None, "address": None, "invoice_count": 4, "total_billed_fmt": "Rs 28,000"},
+    ]
+    return templates.TemplateResponse("partials/customers_table.html", {
+        "request": request, "customers": customers, "page": 1, "page_range": [1], "has_next": False, "total": len(customers)
+    })
+
+@app.get("/reports/fbr", response_class=HTMLResponse)
+async def fbr_log(request: Request):
+    ctx = base_ctx(request)
+    ctx["fbr_stats"] = {"total": 142, "accepted": 139, "pending": 2, "rejected": 1, "acceptance_rate": 97}
+    return templates.TemplateResponse("reports/fbr_log.html", ctx)
+
+@app.get("/reports/gst", response_class=HTMLResponse)
+async def gst_report(request: Request):
+    return templates.TemplateResponse("reports/gst_summary.html", base_ctx(request))
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    return templates.TemplateResponse("settings/index.html", base_ctx(request))
+
+@app.get("/settings/business", response_class=HTMLResponse)
+async def settings_business(request: Request):
+    ctx = base_ctx(request)
+    return templates.TemplateResponse("settings/business.html", ctx)
+
+@app.get("/settings/fbr", response_class=HTMLResponse)
+async def settings_fbr(request: Request):
+    return templates.TemplateResponse("settings/fbr.html", base_ctx(request))
+
+@app.get("/settings/users", response_class=HTMLResponse)
+async def settings_users(request: Request):
+    ctx = base_ctx(request)
+    ctx["users"] = [
+        {"id": 1, "name": "Ahmed Raza", "initials": "AR", "email": "ahmed@albarakatrading.pk", "role": "admin", "status": "active", "last_active": "Today"},
+        {"id": 2, "name": "Fatima Khan", "initials": "FK", "email": "fatima@albarakatrading.pk", "role": "accountant", "status": "active", "last_active": "Yesterday"},
+        {"id": 3, "name": "Usman Ali", "initials": "UA", "email": "usman@albarakatrading.pk", "role": "viewer", "status": "invited", "last_active": None},
+    ]
+    ctx["current_user"] = {"id": 1}
+    return templates.TemplateResponse("settings/users.html", ctx)
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

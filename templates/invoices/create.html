@@ -1,0 +1,1218 @@
+{% extends "base.html" %}
+
+{% block title %}Create Invoice{% endblock %}
+{% block page_title %}Create Invoice{% endblock %}
+
+{% block topbar_actions %}
+<a href="/invoices" class="btn btn-secondary btn-sm">
+  ← Back
+</a>
+{% endblock %}
+
+
+{% block content %}
+
+<form method="POST" action="/invoices/create">
+
+  <div class="form-layout">
+
+
+    <!-- =========================================================
+         LEFT COLUMN
+    ========================================================== -->
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+
+      <!-- Environment -->
+<div class="card" style="margin-bottom:1rem;">
+
+  <div class="card-header">
+    <span class="card-title">FBR Environment</span>
+  </div>
+
+  <div class="card-body">
+
+    <div class="field" style="max-width:320px;">
+      <label>
+        Environment
+        <span class="req">*</span>
+      </label>
+
+      <select
+        name="environment"
+        id="environment"
+        required
+        onchange="toggleScenarioField()"
+      >
+        <option value="sandbox" selected>Sandbox</option>
+        <option value="production">Production</option>
+      </select>
+    </div>
+
+  </div>
+
+</div>
+      <!-- Invoice Details -->
+      <div class="card">
+
+        <div class="card-header">
+          <span class="card-title">Invoice Details</span>
+        </div>
+
+        <div class="card-body">
+
+          <div class="form-grid-2 mb-3">
+
+            <div class="field">
+              <label>
+                Invoice Type
+                <span class="req">*</span>
+              </label>
+
+              <select name="invoiceType" required>
+                <option value="Sale Invoice">Sale Invoice</option>
+                <option value="Debit Note">Debit Note</option>
+              </select>
+            </div>
+
+
+            <div class="field">
+              <label>
+                Invoice Date
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="date"
+                name="invoiceDate"
+                value="{{ today }}"
+                required
+              >
+            </div>
+
+          </div>
+
+
+          <div class="form-grid-2">
+
+            <div class="field">
+
+              <label>
+                Invoice Reference No.
+              </label>
+
+              <input
+                type="text"
+                name="invoiceRefNo"
+                placeholder="Required for Debit Note only"
+              >
+
+            </div>
+
+
+            <div class="field" id="scenario-field">
+
+              <label>
+                Scenario ID
+              </label>
+
+              <input
+                type="text"
+                name="scenarioId"
+                placeholder="SN001"
+              >
+
+              <small>
+                Required in FBR Sandbox only
+              </small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Seller Details -->
+      <div class="card">
+
+        <div class="card-header">
+          <span class="card-title">Seller Details</span>
+        </div>
+
+        <div class="card-body">
+
+
+          <div class="field mb-3">
+
+            <label>
+              Seller NTN / CNIC
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="sellerNTNCNIC"
+              placeholder="0786909"
+              required
+            >
+
+          </div>
+
+
+          <div class="field mb-3">
+
+            <label>
+              Seller Business Name
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="sellerBusinessName"
+              placeholder="Business Name"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-grid-2">
+
+            <div class="field">
+
+              <label>
+                Seller Province
+                <span class="req">*</span>
+              </label>
+
+              <select name="sellerProvince" required>
+
+                <option value="">
+                  Select province
+                </option>
+
+                <option value="Punjab">
+                  Punjab
+                </option>
+
+                <option value="Sindh">
+                  Sindh
+                </option>
+
+                <option value="Khyber Pakhtunkhwa">
+                  Khyber Pakhtunkhwa
+                </option>
+
+                <option value="Balochistan">
+                  Balochistan
+                </option>
+
+                <option value="Islamabad Capital Territory">
+                  Islamabad Capital Territory
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>
+                Seller Address
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="text"
+                name="sellerAddress"
+                placeholder="Business address"
+                required
+              >
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Buyer Details -->
+      <div class="card">
+
+        <div class="card-header">
+          <span class="card-title">Buyer Details</span>
+        </div>
+
+        <div class="card-body">
+
+
+          <div class="form-grid-2 mb-3">
+
+
+            <div class="field">
+
+              <label>
+                Registration Type
+                <span class="req">*</span>
+              </label>
+
+              <select
+                name="buyerRegistrationType"
+                id="buyerRegistrationType"
+                required
+              >
+
+                <option value="Registered">
+                  Registered
+                </option>
+
+                <option value="Unregistered">
+                  Unregistered
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>
+                NTN / CNIC
+              </label>
+
+              <input
+                type="text"
+                name="buyerNTNCNIC"
+                id="buyerNTNCNIC"
+                placeholder="NTN or CNIC"
+              >
+
+              <small>
+                Optional for unregistered buyer
+              </small>
+
+            </div>
+
+          </div>
+
+
+
+          <div class="field mb-3">
+
+            <label>
+              Buyer Business Name
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="buyerBusinessName"
+              placeholder="Buyer name"
+              required
+            >
+
+          </div>
+
+
+
+          <div class="form-grid-2">
+
+            <div class="field">
+
+              <label>
+                Buyer Province
+                <span class="req">*</span>
+              </label>
+
+              <select name="buyerProvince" required>
+
+                <option value="">
+                  Select province
+                </option>
+
+                <option value="Punjab">
+                  Punjab
+                </option>
+
+                <option value="Sindh">
+                  Sindh
+                </option>
+
+                <option value="Khyber Pakhtunkhwa">
+                  Khyber Pakhtunkhwa
+                </option>
+
+                <option value="Balochistan">
+                  Balochistan
+                </option>
+
+                <option value="Islamabad Capital Territory">
+                  Islamabad Capital Territory
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>
+                Buyer Address
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="text"
+                name="buyerAddress"
+                placeholder="Buyer address"
+                required
+              >
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- =========================================================
+         RIGHT COLUMN
+    ========================================================== -->
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+
+
+      <!-- Invoice Items -->
+      <div class="card">
+
+
+        <div class="card-header">
+
+          <span class="card-title">
+            Invoice Items
+          </span>
+
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick="addLineItem()"
+          >
+            + Add Item
+          </button>
+
+        </div>
+
+
+
+        <div
+          class="card-body"
+          style="padding:0; overflow-x:auto;"
+        >
+
+
+          <table class="items-table">
+
+            <thead>
+
+              <tr>
+
+                <th style="padding-left:1rem;">
+                  Description
+                </th>
+
+                <th>
+                  HS Code
+                </th>
+
+                <th>
+                  Sale Type
+                </th>
+
+                <th>
+                  Rate
+                </th>
+
+                <th>
+                  UOM
+                </th>
+
+                <th class="right">
+                  Qty
+                </th>
+
+                <th class="right">
+                  Value Excl. ST
+                </th>
+
+                <th class="right">
+                  Sales Tax
+                </th>
+
+                <th></th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="line-items-body">
+
+
+              <!-- ITEM 1 -->
+              <tr
+                id="item-row-1"
+                class="main-item-row"
+              >
+
+
+                <!-- Product Description -->
+                <td style="padding-left:1rem;">
+
+                  <input
+                    type="text"
+                    name="items[1][productDescription]"
+                    placeholder="Product"
+                    required
+                  >
+
+                </td>
+
+
+
+                <!-- HS Code -->
+                <td>
+
+                  <input
+                    type="text"
+                    name="items[1][hsCode]"
+                    placeholder="0101.2100"
+                    required
+                    style="width:110px;"
+                  >
+
+                </td>
+
+
+
+                <!-- Sale Type -->
+                <td>
+
+                  <input
+                    type="text"
+                    name="items[1][saleType]"
+                    placeholder="Goods at standard rate"
+                    required
+                    style="width:180px;"
+                  >
+
+                </td>
+
+
+
+                <!-- Rate -->
+                <td>
+
+                  <input
+                    type="text"
+                    name="items[1][rate]"
+                    placeholder="18%"
+                    required
+                    style="width:80px;"
+                  >
+
+                </td>
+
+
+
+                <!-- UOM -->
+                <td>
+
+                  <input
+                    type="text"
+                    name="items[1][uoM]"
+                    placeholder="KG"
+                    required
+                    style="width:80px;"
+                  >
+
+                </td>
+
+
+
+                <!-- Quantity -->
+                <td>
+
+                  <input
+                    type="number"
+                    name="items[1][quantity]"
+                    min="0"
+                    step="any"
+                    required
+                    style="width:80px;"
+                  >
+
+                </td>
+
+
+
+                <!-- Value Excluding ST -->
+                <td>
+
+                  <input
+                    type="number"
+                    name="items[1][valueSalesExcludingST]"
+                    min="0"
+                    step="0.01"
+                    required
+                    style="width:130px;"
+                  >
+
+                </td>
+
+
+
+                <!-- Sales Tax -->
+                <td>
+
+                  <input
+                    type="number"
+                    name="items[1][salesTaxApplicable]"
+                    min="0"
+                    step="0.01"
+                    value="0"
+                    required
+                    style="width:110px;"
+                  >
+
+                </td>
+
+
+
+                <!-- Delete -->
+                <td>
+
+                  <button
+                    type="button"
+                    class="del-btn"
+                    onclick="removeLineItem(1)"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
+
+                </td>
+
+              </tr>
+
+
+
+              <!-- ADDITIONAL FBR FIELDS -->
+              <tr
+                id="item-details-1"
+                class="item-details-row"
+              >
+
+                <td colspan="9">
+
+                  <div
+                    class="form-grid-3"
+                    style="padding:1rem;"
+                  >
+
+
+                    <!-- Total Values -->
+                    <div class="field">
+
+                      <label>
+                        Total Value
+                        <span class="req">*</span>
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][totalValues]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                        required
+                      >
+
+                    </div>
+
+
+
+                    <!-- Fixed / Retail Price -->
+                    <div class="field">
+
+                      <label>
+                        Fixed / Retail Price
+                        <span class="req">*</span>
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][fixedNotifiedValueOrRetailPrice]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                        required
+                      >
+
+                    </div>
+
+
+
+                    <!-- Tax Withheld -->
+                    <div class="field">
+
+                      <label>
+                        ST Withheld
+                        <span class="req">*</span>
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][salesTaxWithheldAtSource]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                        required
+                      >
+
+                    </div>
+
+
+
+                    <!-- Extra Tax -->
+                    <div class="field">
+
+                      <label>
+                        Extra Tax
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][extraTax]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                      >
+
+                    </div>
+
+
+
+                    <!-- Further Tax -->
+                    <div class="field">
+
+                      <label>
+                        Further Tax
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][furtherTax]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                      >
+
+                    </div>
+
+
+
+                    <!-- FED -->
+                    <div class="field">
+
+                      <label>
+                        FED Payable
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][fedPayable]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                      >
+
+                    </div>
+
+
+
+                    <!-- Discount -->
+                    <div class="field">
+
+                      <label>
+                        Discount
+                      </label>
+
+                      <input
+                        type="number"
+                        name="items[1][discount]"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                      >
+
+                    </div>
+
+
+
+                    <!-- SRO Schedule -->
+                    <div class="field">
+
+                      <label>
+                        SRO Schedule No.
+                      </label>
+
+                      <input
+                        type="text"
+                        name="items[1][sroScheduleNo]"
+                        placeholder="SRO123"
+                      >
+
+                    </div>
+
+
+
+                    <!-- SRO Serial -->
+                    <div class="field">
+
+                      <label>
+                        SRO Item Serial No.
+                      </label>
+
+                      <input
+                        type="text"
+                        name="items[1][sroItemSerialNo]"
+                      >
+
+                    </div>
+
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Submit -->
+      <div
+        style="
+          display:flex;
+          justify-content:flex-end;
+          gap:.75rem;
+        "
+      >
+
+        <a
+          href="/invoices"
+          class="btn btn-secondary"
+        >
+          Cancel
+        </a>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+        >
+          Create Invoice
+        </button>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</form>
+
+{% if success %}
+
+<div class="modal-overlay show">
+
+  <div class="success-modal">
+
+    <div class="success-icon">✓</div>
+
+    <h2>Invoice Created</h2>
+
+    <p>Your invoice was submitted successfully.</p>
+
+    <!-- Temporary: show backend response -->
+    <div class="invoice-response">
+      {{ result }}
+    </div>
+
+    <div class="success-actions">
+
+      <a href="/invoices" class="btn btn-secondary">
+        Back to Invoices
+      </a>
+
+      <a href="/invoices/create" class="btn btn-primary">
+        Create Another Invoice
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endif %}
+
+
+
+<script>
+
+let itemIndex = 1;
+
+
+function addLineItem() {
+
+  itemIndex++;
+
+  const tbody =
+    document.getElementById("line-items-body");
+
+
+  const row = document.createElement("tr");
+
+  row.id = `item-row-${itemIndex}`;
+
+  row.innerHTML = `
+
+    <td style="padding-left:1rem;">
+      <input
+        type="text"
+        name="items[${itemIndex}][productDescription]"
+        required
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="text"
+        name="items[${itemIndex}][hsCode]"
+        placeholder="0101.2100"
+        required
+        style="width:110px;"
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="text"
+        name="items[${itemIndex}][saleType]"
+        placeholder="Goods at standard rate"
+        required
+        style="width:180px;"
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="text"
+        name="items[${itemIndex}][rate]"
+        placeholder="18%"
+        required
+        style="width:80px;"
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="text"
+        name="items[${itemIndex}][uoM]"
+        placeholder="KG"
+        required
+        style="width:80px;"
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="number"
+        name="items[${itemIndex}][quantity]"
+        min="0"
+        step="any"
+        required
+        style="width:80px;"
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="number"
+        name="items[${itemIndex}][valueSalesExcludingST]"
+        min="0"
+        step="0.01"
+        required
+        style="width:130px;"
+      >
+    </td>
+
+
+    <td>
+      <input
+        type="number"
+        name="items[${itemIndex}][salesTaxApplicable]"
+        value="0"
+        min="0"
+        step="0.01"
+        required
+        style="width:110px;"
+      >
+    </td>
+
+
+    <td>
+      <button
+        type="button"
+        class="del-btn"
+        onclick="removeLineItem(${itemIndex})"
+      >
+        ×
+      </button>
+    </td>
+
+  `;
+
+
+  const detailsRow =
+    document.createElement("tr");
+
+  detailsRow.id =
+    `item-details-${itemIndex}`;
+
+
+  detailsRow.innerHTML = `
+
+    <td colspan="9">
+
+      <div
+        class="form-grid-3"
+        style="padding:1rem;"
+      >
+
+        <div class="field">
+
+          <label>Total Value *</label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][totalValues]"
+            value="0"
+            step="0.01"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Fixed / Retail Price *
+          </label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][fixedNotifiedValueOrRetailPrice]"
+            value="0"
+            step="0.01"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>ST Withheld *</label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][salesTaxWithheldAtSource]"
+            value="0"
+            step="0.01"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Extra Tax</label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][extraTax]"
+            value="0"
+            step="0.01"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Further Tax</label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][furtherTax]"
+            value="0"
+            step="0.01"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>FED Payable</label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][fedPayable]"
+            value="0"
+            step="0.01"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Discount</label>
+
+          <input
+            type="number"
+            name="items[${itemIndex}][discount]"
+            value="0"
+            step="0.01"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>SRO Schedule No.</label>
+
+          <input
+            type="text"
+            name="items[${itemIndex}][sroScheduleNo]"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>SRO Item Serial No.</label>
+
+          <input
+            type="text"
+            name="items[${itemIndex}][sroItemSerialNo]"
+          >
+
+        </div>
+
+      </div>
+
+    </td>
+
+  `;
+
+
+  tbody.appendChild(row);
+  tbody.appendChild(detailsRow);
+
+}
+
+
+
+function removeLineItem(index) {
+
+  document
+    .getElementById(`item-row-${index}`)
+    ?.remove();
+
+  document
+    .getElementById(`item-details-${index}`)
+    ?.remove();
+
+}
+function toggleScenarioField() {
+
+  const environment =
+    document.getElementById("environment").value;
+
+  const scenarioField =
+    document.getElementById("scenario-field");
+
+  const scenarioInput =
+    document.getElementById("scenarioId");
+
+
+  if (environment === "sandbox") {
+
+    scenarioField.style.display = "block";
+    scenarioInput.required = true;
+
+  } else {
+
+    scenarioField.style.display = "none";
+    scenarioInput.required = false;
+    scenarioInput.value = "";
+
+  }
+
+}
+
+
+document.addEventListener(
+  "DOMContentLoaded",
+  toggleScenarioField
+);
+</script>
+
+
+{% endblock %}
