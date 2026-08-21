@@ -39,7 +39,12 @@ Invoices
 
     <div style="padding: 2rem; text-align: center;">
         <p style="color: var(--text-muted);">
-            No invoices created yet.
+           Tenant Name: {{ request.session.get("tenant_name", "No Tenant") }}
+           {{ request.session.get("tenant_ntn") }}
+           {{ request.session.get("tenant_province") }}
+           {{ request.session.get("tenant_id") }}
+
+
         </p>
     </div>
 

@@ -1,30 +1,39 @@
 import os
-from collections.abc import Generator
 
 from dotenv import load_dotenv
-from psycopg import Connection
-from psycopg.rows import dict_row
-from psycopg_pool import ConnectionPool
+
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
+from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is missing from the .env file.")
+class Base(DeclarativeBase):
+    pass
 
 
-pool = ConnectionPool(
-    conninfo=DATABASE_URL,
-    min_size=1,
-    max_size=10,
-    open=True,
-    kwargs={
-        "row_factory": dict_row,
-    },
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    connect_args={
+        "ssl": "require"
+    }
 )
 
 
-def get_connection() -> Generator[Connection, None, None]:
-    with pool.connection() as connection:
-        yield connection
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
+async def get_db():
+    async with SessionLocal() as session:
+        yield session

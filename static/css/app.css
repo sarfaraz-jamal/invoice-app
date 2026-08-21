@@ -701,3 +701,33 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   /* Space between action buttons */
   gap: .75rem;
 }
+
+.logout-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    margin-top: 16px;
+    padding: 10px 12px;
+
+    border-radius: 8px;
+
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.logout-button svg {
+    flex-shrink: 0;
+}
+
+.logout-button:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
