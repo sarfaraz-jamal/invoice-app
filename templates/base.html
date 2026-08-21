@@ -44,6 +44,9 @@
           <div class="tenant-ntn">
             NTN {{ request.session.get("tenant_ntn", "-") }}
           </div>
+          <div class="tenant-address">
+            {{ request.session.get("tenant_address", "-") }}
+          </div>
 
         </div>
 

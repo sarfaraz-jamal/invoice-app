@@ -23,6 +23,10 @@ async def invoices_page(request: Request):
 
 @router.get("/invoice_form")
 async def invoice_form(request: Request):
+    print("===== INVOICE FORM SESSION =====")
+    print(dict(request.session))
+    print("Province:", repr(request.session.get("tenant_province")))
+    print("Address:", repr(request.session.get("tenant_address")))
     return templates.TemplateResponse(
         request=request,
         name="invoices/create.html",

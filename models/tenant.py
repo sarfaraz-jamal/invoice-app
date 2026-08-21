@@ -58,16 +58,19 @@ class Tenant(Base):
         String(20),
     )
 
-    province: Mapped[str | None] = mapped_column(
+    province: Mapped[str] = mapped_column(
         String(100),
+        nullable=False,
     )
 
     city: Mapped[str | None] = mapped_column(
         String(100),
     )
 
-    address: Mapped[str | None] = mapped_column(
+    address: Mapped[str] = mapped_column(
         Text,
+        nullable=False,
+        
     )
 
     sandbox_environment_token: Mapped[str | None] = mapped_column(
