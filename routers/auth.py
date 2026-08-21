@@ -133,15 +133,12 @@ async def login(
         else None
     )
    
-   
-
     request.session["tenant_ntn"] = (
         tenant.ntn_cnic
         if tenant
         else None
     )
 
-   
     request.session["tenant_province"] = (
             tenant.province 
             if tenant 

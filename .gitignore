@@ -1,4 +1,16 @@
-.env
+
 credentials
 /docs/
+
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
 .venv/
+venv/
+
+# Environment variables
+.env
