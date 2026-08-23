@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import auth, invoices
+from routers import auth, invoices, fbr_reference
 
 
 app = FastAPI(
@@ -52,6 +52,8 @@ app.include_router(
 )
 
 app.include_router(auth.router)
+
+app.include_router(fbr_reference.router)
 
 
 # Home page

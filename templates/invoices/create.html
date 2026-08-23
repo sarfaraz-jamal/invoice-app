@@ -250,6 +250,102 @@
     display: none !important;
   }
 
+  .searchable-select {
+  position: relative;
+}
+
+.uom-search {
+  width: 100%;
+}
+
+.uom-options {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+
+  max-height: 220px;
+  overflow-y: auto;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+
+  padding: 4px;
+}
+
+.uom-options button {
+  display: block;
+  width: 100%;
+
+  border: 0;
+  background: transparent;
+
+  text-align: left;
+  padding: 8px 10px;
+
+  border-radius: 5px;
+  cursor: pointer;
+
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.uom-options button:hover {
+  background: var(--surface-2);
+}
+
+.uom-options button.hidden {
+  display: none;
+}
+
+.sale-type-options {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+
+  max-height: 250px;
+  overflow-y: auto;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+
+  padding: 4px;
+}
+
+.sale-type-options button {
+  display: block;
+  width: 100%;
+
+  border: 0;
+  background: transparent;
+
+  text-align: left;
+  padding: 8px 10px;
+
+  border-radius: 5px;
+  cursor: pointer;
+
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.sale-type-options button:hover {
+  background: var(--surface-2);
+}
+
+.sale-type-options button.hidden {
+  display: none;
+}
+
   @media (max-width: 1180px) {
     .invoice-form-shell {
       grid-template-columns: 1fr;
@@ -516,6 +612,12 @@
             value="{{ request.session.get('tenant_address', '') }}"
           >
 
+          <input
+            type="hidden"
+            id="sellerProvinceCode"
+            value="{{ request.session.get('tenant_province_code', '') }}"
+          >
+
         </div>
 
       </div>
@@ -606,48 +708,55 @@
 
             <div class="field">
 
-              <label>
-                Buyer Province
-                <span class="req">*</span>
-              </label>
+  <label>
+    Buyer Province
+    <span class="req">*</span>
+  </label>
 
-              <select
-                name="buyerProvince"
-                id="buyerProvince"
-                required
-              >
-                <option value="">Select Province</option>
+  <select
+    name="buyerProvince"
+    id="buyerProvince"
+    required
+  >
+    <option value="">Select Province</option>
 
-                <option value="BALOCHISTAN">
-                  BALOCHISTAN
-                </option>
+    <option value="BALOCHISTAN" data-code="2">
+      BALOCHISTAN
+    </option>
 
-                <option value="AZAD JAMMU AND KASHMIR">
-                  AZAD JAMMU AND KASHMIR
-                </option>
+    <option value="AZAD JAMMU AND KASHMIR" data-code="4">
+      AZAD JAMMU AND KASHMIR
+    </option>
 
-                <option value="CAPITAL TERRITORY">
-                  CAPITAL TERRITORY
-                </option>
+    <option value="CAPITAL TERRITORY" data-code="5">
+      CAPITAL TERRITORY
+    </option>
 
-                <option value="KHYBER PAKHTUNKHWA">
-                  KHYBER PAKHTUNKHWA
-                </option>
+    <option value="KHYBER PAKHTUNKHWA" data-code="6">
+      KHYBER PAKHTUNKHWA
+    </option>
 
-                <option value="PUNJAB">
-                  PUNJAB
-                </option>
+    <option value="PUNJAB" data-code="7">
+      PUNJAB
+    </option>
 
-                <option value="SINDH">
-                  SINDH
-                </option>
+    <option value="SINDH" data-code="8">
+      SINDH
+    </option>
 
-                <option value="GILGIT BALTISTAN">
-                  GILGIT BALTISTAN
-                </option>
-              </select>
+    <option value="GILGIT BALTISTAN" data-code="9">
+      GILGIT BALTISTAN
+    </option>
 
-            </div>
+  </select>
+
+  <input
+    type="hidden"
+    name="buyerProvinceCode"
+    id="buyerProvinceCode"
+  >
+
+</div>
 
 
             <div class="field">
@@ -899,22 +1008,67 @@
         </div>
 
 
-        <div class="field">
+        <div class="field sale-type-field">
 
-          <label>
-            Sale Type
-            <span class="req">*</span>
-          </label>
+  <label>
+    Sale Type
+    <span class="req">*</span>
+  </label>
 
-          <input
-            type="text"
-            name="items[__INDEX__][saleType]"
-            class="sale-type"
-            required
-            placeholder="Enter FBR sale type"
-          >
+  <div class="searchable-select">
 
-        </div>
+    <input
+      type="text"
+      class="sale-type-search"
+      placeholder="Search Sale Type..."
+      autocomplete="off"
+    >
+
+    <input
+      type="hidden"
+      name="items[__INDEX__][saleType]"
+      class="sale-type-value"
+    >
+
+    <input
+      type="hidden"
+      class="sale-type-id"
+>
+
+    <div class="sale-type-options hidden">
+
+      <button type="button" data-id="75" data-value="Goods at standard rate (default)">Goods at standard rate (default)</button>
+      <button type="button" data-id="24" data-value="Goods at Reduced Rate">Goods at Reduced Rate</button>
+      <button type="button" data-id="80" data-value="Goods at zero-rate">Goods at zero-rate</button>
+      <button type="button" data-id="85" data-value="Petroleum Products">Petroleum Products</button>
+      <button type="button" data-id="62" data-value="Electricity Supply to Retailers">Electricity Supply to Retailers</button>
+      <button type="button" data-id="129" data-value="SIM">SIM</button>
+      <button type="button" data-id="77" data-value="Gas to CNG stations">Gas to CNG stations</button>
+      <button type="button" data-id="122" data-value="Mobile Phones">Mobile Phones</button>
+      <button type="button" data-id="25" data-value="Processing/Conversion of Goods">Processing/Conversion of Goods</button>
+      <button type="button" data-id="23" data-value="3rd Schedule Goods">3rd Schedule Goods</button>
+      <button type="button" data-id="21" data-value="Goods (FED in ST Mode)">Goods (FED in ST Mode)</button>
+      <button type="button" data-id="22" data-value="Services (FED in ST Mode)">Services (FED in ST Mode)</button>
+      <button type="button" data-id="18" data-value="Services">Services</button>
+      <button type="button" data-id="81" data-value="Exempt goods">Exempt goods</button>
+      <button type="button" data-id="82" data-value="DTRE goods">DTRE goods</button>
+      <button type="button" data-id="130" data-value="Cotton ginners">Cotton ginners</button>
+      <button type="button" data-id="132" data-value="Electric Vehicle">Electric Vehicle</button>
+      <button type="button" data-id="134" data-value="Cement /Concrete Block">Cement /Concrete Block</button>
+      <button type="button" data-id="84" data-value="Telecommunication services">Telecommunication services</button>
+      <button type="button" data-id="123" data-value="Steel melting and re-rolling">Steel melting and re-rolling</button>
+      <button type="button" data-id="125" data-value="Ship breaking">Ship breaking</button>
+      <button type="button" data-id="115" data-value="Potassium Chlorate">Potassium Chlorate</button>
+      <button type="button" data-id="178" data-value="CNG Sales">CNG Sales</button>
+      <button type="button" data-id="181" data-value="Toll Manufacturing">Toll Manufacturing</button>
+      <button type="button" data-id="138" data-value="Non-Adjustable Supplies">Non-Adjustable Supplies</button>
+      <button type="button" data-id="139" data-value="Goods as per SRO.297(|)/2023">Goods as per SRO.297(|)/2023</button>
+
+    </div>
+
+  </div>
+
+</div>
 
 
         <div class="field">
@@ -924,33 +1078,83 @@
             <span class="req">*</span>
           </label>
 
-          <input
-            type="text"
+          <select
             name="items[__INDEX__][rate]"
             class="rate"
             required
-            placeholder="e.g. 18%"
+            disabled
           >
+          <option value="">
+            Select Sale Type first
+          </option>
+      </select>
 
         </div>
 
 
-        <div class="field">
+       <div class="field uom-field">
 
-          <label>
-            UOM
-            <span class="req">*</span>
-          </label>
+  <label>
+    UOM
+    <span class="req">*</span>
+  </label>
 
-          <input
-            type="text"
-            name="items[__INDEX__][uoM]"
-            class="uom"
-            required
-            placeholder="e.g. Numbers"
-          >
+  <div class="searchable-select">
 
-        </div>
+    <input
+      type="text"
+      class="uom-search"
+      placeholder="Search UOM..."
+      autocomplete="off"
+    >
+
+    <input
+      type="hidden"
+      name="items[__INDEX__][uoM]"
+      class="uom-value"
+      required
+    >
+
+    <div class="uom-options hidden">
+
+      <button type="button" data-value="MT">MT</button>
+      <button type="button" data-value="Bill of lading">Bill of lading</button>
+      <button type="button" data-value="SET">SET</button>
+      <button type="button" data-value="KWH">KWH</button>
+      <button type="button" data-value="40KG">40KG</button>
+      <button type="button" data-value="Liter">Liter</button>
+      <button type="button" data-value="SqY">SqY</button>
+      <button type="button" data-value="Bag">Bag</button>
+      <button type="button" data-value="KG">KG</button>
+      <button type="button" data-value="MMBTU">MMBTU</button>
+      <button type="button" data-value="Meter">Meter</button>
+      <button type="button" data-value="Pcs">Pcs</button>
+      <button type="button" data-value="Carat">Carat</button>
+      <button type="button" data-value="Cubic Metre">Cubic Metre</button>
+      <button type="button" data-value="Dozen">Dozen</button>
+      <button type="button" data-value="Gram">Gram</button>
+      <button type="button" data-value="Gallon">Gallon</button>
+      <button type="button" data-value="Kilogram">Kilogram</button>
+      <button type="button" data-value="Pound">Pound</button>
+      <button type="button" data-value="Timber Logs">Timber Logs</button>
+      <button type="button" data-value="Numbers, pieces, units">Numbers, pieces, units</button>
+      <button type="button" data-value="Packs">Packs</button>
+      <button type="button" data-value="Pair">Pair</button>
+      <button type="button" data-value="Square Foot">Square Foot</button>
+      <button type="button" data-value="Square Metre">Square Metre</button>
+      <button type="button" data-value="Thousand Unit">Thousand Unit</button>
+      <button type="button" data-value="Mega Watt">Mega Watt</button>
+      <button type="button" data-value="Foot">Foot</button>
+      <button type="button" data-value="Barrels">Barrels</button>
+      <button type="button" data-value="NO">NO</button>
+      <button type="button" data-value="Others">Others</button>
+      <button type="button" data-value="1000 kWh">1000 kWh</button>
+
+    </div>
+
+  </div>
+
+</div>
 
       </div>
 
@@ -1278,8 +1482,13 @@
 
   function wireItem(item) {
 
-    const removeButton = $(".remove-item", item);
+  // ============================
+  // REMOVE ITEM
+  // ============================
 
+  const removeButton = $(".remove-item", item);
+
+  if (removeButton) {
     removeButton.addEventListener("click", () => {
 
       const items = $$(".invoice-item");
@@ -1291,23 +1500,192 @@
       item.remove();
 
       renumberItems();
-
       updateSummary();
-
     });
+  }
 
 
-    const description = $(".product-description", item);
+  // ============================
+  // DESCRIPTION
+  // ============================
 
+  const description = $(".product-description", item);
+
+  if (description) {
     description.addEventListener("input", () => {
 
-      $(".item-description-title", item).textContent =
-        description.value || "New invoice item";
+      const title = $(".item-description-title", item);
+
+      if (title) {
+        title.textContent =
+          description.value || "New invoice item";
+      }
+
+    });
+  }
+
+
+  // ============================
+  // SEARCHABLE UOM
+  // ============================
+
+  const uomSearch = $(".uom-search", item);
+  const uomValue = $(".uom-value", item);
+  const uomOptions = $(".uom-options", item);
+
+  if (uomSearch && uomValue && uomOptions) {
+
+    const uomButtons =
+      $$(".uom-options button", item);
+
+
+    // Open dropdown
+    uomSearch.addEventListener("focus", () => {
+      uomOptions.classList.remove("hidden");
+    });
+
+
+    // Search / filter
+    uomSearch.addEventListener("input", () => {
+
+      const search =
+        uomSearch.value
+          .trim()
+          .toLowerCase();
+
+      // typing means previous selected value
+      // is no longer trusted
+      uomValue.value = "";
+
+      uomSearch.setCustomValidity("");
+
+      uomOptions.classList.remove("hidden");
+
+
+      uomButtons.forEach(button => {
+
+        const value =
+          (button.dataset.value || "")
+            .toLowerCase();
+
+        button.classList.toggle(
+          "hidden",
+          !value.includes(search)
+        );
+
+      });
 
     });
 
 
-    $$("input[type='number']", item).forEach(input => {
+    // Select UOM
+    uomButtons.forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const value =
+          button.dataset.value || "";
+
+        uomSearch.value = value;
+
+        uomValue.value = value;
+
+        uomSearch.setCustomValidity("");
+
+        uomOptions.classList.add("hidden");
+
+      });
+
+    });
+
+  }
+
+  // =========================================================
+// SEARCHABLE SALE TYPE
+// =========================================================
+
+const saleTypeSearch = $(".sale-type-search", item);
+const saleTypeValue = $(".sale-type-value", item);
+const saleTypeOptions = $(".sale-type-options", item);
+
+if (saleTypeSearch && saleTypeValue && saleTypeOptions) {
+
+  const saleTypeButtons =
+    $$(".sale-type-options button", item);
+
+
+  // Open dropdown
+  saleTypeSearch.addEventListener("focus", () => {
+
+    saleTypeOptions.classList.remove("hidden");
+
+  });
+
+
+  // Filter while typing
+  saleTypeSearch.addEventListener("input", () => {
+
+    const search =
+      saleTypeSearch.value
+        .trim()
+        .toLowerCase();
+
+    // Clear previous valid selection
+    saleTypeValue.value = "";
+
+    saleTypeSearch.setCustomValidity("");
+
+    saleTypeOptions.classList.remove("hidden");
+
+
+    saleTypeButtons.forEach(button => {
+
+      const value =
+        (button.dataset.value || "")
+          .toLowerCase();
+
+      button.classList.toggle(
+        "hidden",
+        !value.includes(search)
+      );
+
+    });
+
+  });
+
+
+  // Select Sale Type
+  saleTypeButtons.forEach(button => {
+
+  button.addEventListener("click", async () => {
+
+    const value = button.dataset.value || "";
+    const id = button.dataset.id || "";
+
+    saleTypeSearch.value = value;
+    saleTypeValue.value = value;
+
+    $(".sale-type-id", item).value = id;
+
+    saleTypeSearch.setCustomValidity("");
+
+    saleTypeOptions.classList.add("hidden");
+
+    // Load valid FBR rates for selected sale type
+    await loadRates(item);
+
+  });
+
+});
+
+}
+
+  // ============================
+  // SUMMARY
+  // ============================
+
+  $$("input[type='number']", item)
+    .forEach(input => {
 
       input.addEventListener(
         "input",
@@ -1316,8 +1694,158 @@
 
     });
 
+}
+
+async function loadRates(item) {
+
+  const transactionTypeId =
+    $(".sale-type-id", item)?.value;
+
+  const sellerProvinceCode =
+    $("#sellerProvinceCode")?.value;
+
+  const invoiceDate =
+    $("#invoiceDate")?.value;
+
+  const rateSelect =
+    $(".rate", item);
+
+
+  if (!transactionTypeId) {
+
+    rateSelect.disabled = true;
+
+    rateSelect.innerHTML =
+      '<option value="">Select Sale Type first</option>';
+
+    return;
   }
 
+
+  if (!sellerProvinceCode) {
+
+    rateSelect.disabled = true;
+
+    rateSelect.innerHTML =
+      '<option value="">Seller province code missing</option>';
+
+    console.error(
+      "tenant_province_code is missing from session"
+    );
+
+    return;
+  }
+
+
+  try {
+
+    rateSelect.disabled = true;
+
+    rateSelect.innerHTML =
+      '<option value="">Loading FBR rates...</option>';
+
+    const environment =
+   document.getElementById("environment").value;
+
+    const params = new URLSearchParams({
+      trans_type_id: transactionTypeId,
+      date: invoiceDate,
+      environment: environment
+    });
+
+
+    const response = await fetch(
+      `/api/fbr/reference/rates?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        }
+      }
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `Rate API failed: ${response.status} - ${errorText}`
+      );
+
+    }
+
+
+    const rates = await response.json();
+
+
+    rateSelect.innerHTML =
+      '<option value="">Select Rate</option>';
+
+
+    rates.forEach(rate => {
+
+      const option =
+        document.createElement("option");
+
+
+      /*
+       Adjust these fallbacks depending on
+       the normalized JSON returned by FastAPI.
+      */
+
+      const description =
+        rate.description ??
+        rate.ratE_DESC ??
+        rate.rateDesc ??
+        "";
+
+
+      const id =
+        rate.id ??
+        rate.ratE_ID ??
+        rate.rateId ??
+        "";
+
+
+      const numericValue =
+        rate.value ??
+        rate.ratE_VALUE ??
+        rate.rateValue ??
+        "";
+
+
+      option.value = description;
+
+      option.textContent = description;
+
+      option.dataset.id = id;
+
+      option.dataset.value = numericValue;
+
+
+      rateSelect.appendChild(option);
+
+    });
+
+
+    rateSelect.disabled = false;
+
+
+  } catch (error) {
+
+    console.error(
+      "Unable to load FBR rates:",
+      error
+    );
+
+
+    rateSelect.innerHTML =
+      '<option value="">Unable to load rates</option>';
+
+    rateSelect.disabled = true;
+
+  }
+
+}
 
   // =============================================================
   // RENUMBER ITEMS
@@ -1586,6 +2114,21 @@
       toggleInvoiceReference
     );
 
+  $("#invoiceDate").addEventListener("change", () => {
+
+  $$(".invoice-item").forEach(item => {
+
+    const saleTypeId =
+      $(".sale-type-id", item)?.value;
+
+    if (saleTypeId) {
+      loadRates(item);
+    }
+
+  });
+
+});
+
 
   // =============================================================
   // INITIAL LOAD
@@ -1605,6 +2148,23 @@
 
     }
   );
+
+  document.addEventListener("click", event => {
+
+  $$(".searchable-select").forEach(select => {
+
+    if (!select.contains(event.target)) {
+
+      const options =
+        $(".uom-options", select);
+
+      options?.classList.add("hidden");
+
+    }
+
+  });
+
+});
 
 </script>
 

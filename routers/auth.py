@@ -145,6 +145,11 @@ async def login(
             else None
         )
 
+    request.session["tenant_province_code"] = (
+        tenant.province_code 
+        if tenant 
+        else None
+    )
     request.session["tenant_address"] = (
         tenant.address 
         if tenant 

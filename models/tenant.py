@@ -6,6 +6,7 @@ from sqlalchemy import (
     Text,
     Boolean,
     DateTime,
+    Integer,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -61,6 +62,11 @@ class Tenant(Base):
     province: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
+    )
+
+    province_code: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
     )
 
     city: Mapped[str | None] = mapped_column(
