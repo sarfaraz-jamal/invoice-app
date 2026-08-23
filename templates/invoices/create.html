@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Create Invoice{% endblock %}
@@ -380,7 +381,7 @@
 <form
   id="invoice-form"
   method="POST"
-  action="/invoices/create"
+  action="/invoices/submit"
 >
 
   <div class="invoice-form-shell">
@@ -980,456 +981,409 @@
     </div>
 
 
-    <div class="invoice-item-body">
+<div class="invoice-item-body">
+
+  <!-- ROW 1: ITEM IDENTIFICATION -->
+  <div class="item-grid-primary">
+
+    <div class="field">
+      <label>
+        HS Code
+        <span class="req">*</span>
+      </label>
+
+      <input
+        type="text"
+        name="items[__INDEX__][hsCode]"
+        class="hs-code"
+        required
+        placeholder="e.g. 6903.1000"
+      >
+    </div>
 
 
-      <!-- =====================================================
-           FBR ITEM CLASSIFICATION
-      ====================================================== -->
+    <div class="field">
+      <label>
+        Description
+        <span class="req">*</span>
+      </label>
 
-      <div class="item-grid-primary">
+      <input
+        type="text"
+        name="items[__INDEX__][productDescription]"
+        class="product-description"
+        required
+        placeholder="Product / service description"
+      >
+    </div>
 
 
-        <div class="field">
+    <div class="field sale-type-field">
+      <label>
+        Sale Type
+        <span class="req">*</span>
+      </label>
 
-          <label>
-            HS Code
-            <span class="req">*</span>
-          </label>
+      <div class="searchable-select">
 
-          <input
-            type="text"
-            name="items[__INDEX__][hsCode]"
-            class="hs-code"
-            required
-            placeholder="e.g. 6903.1000"
-          >
+        <input
+          type="text"
+          class="sale-type-search"
+          placeholder="Search Sale Type..."
+          autocomplete="off"
+        >
+
+        <input
+          type="hidden"
+          name="items[__INDEX__][saleType]"
+          class="sale-type-value"
+        >
+
+        <input
+          type="hidden"
+          class="sale-type-id"
+        >
+
+        <div class="sale-type-options hidden">
+
+          <button type="button" data-id="75" data-value="Goods at standard rate (default)">Goods at standard rate (default)</button>
+          <button type="button" data-id="24" data-value="Goods at Reduced Rate">Goods at Reduced Rate</button>
+          <button type="button" data-id="80" data-value="Goods at zero-rate">Goods at zero-rate</button>
+          <button type="button" data-id="85" data-value="Petroleum Products">Petroleum Products</button>
+          <button type="button" data-id="62" data-value="Electricity Supply to Retailers">Electricity Supply to Retailers</button>
+          <button type="button" data-id="129" data-value="SIM">SIM</button>
+          <button type="button" data-id="77" data-value="Gas to CNG stations">Gas to CNG stations</button>
+          <button type="button" data-id="122" data-value="Mobile Phones">Mobile Phones</button>
+          <button type="button" data-id="25" data-value="Processing/Conversion of Goods">Processing/Conversion of Goods</button>
+          <button type="button" data-id="23" data-value="3rd Schedule Goods">3rd Schedule Goods</button>
+          <button type="button" data-id="21" data-value="Goods (FED in ST Mode)">Goods (FED in ST Mode)</button>
+          <button type="button" data-id="22" data-value="Services (FED in ST Mode)">Services (FED in ST Mode)</button>
+          <button type="button" data-id="18" data-value="Services">Services</button>
+          <button type="button" data-id="81" data-value="Exempt goods">Exempt goods</button>
+          <button type="button" data-id="82" data-value="DTRE goods">DTRE goods</button>
+          <button type="button" data-id="130" data-value="Cotton ginners">Cotton ginners</button>
+          <button type="button" data-id="132" data-value="Electric Vehicle">Electric Vehicle</button>
+          <button type="button" data-id="134" data-value="Cement /Concrete Block">Cement /Concrete Block</button>
+          <button type="button" data-id="84" data-value="Telecommunication services">Telecommunication services</button>
+          <button type="button" data-id="123" data-value="Steel melting and re-rolling">Steel melting and re-rolling</button>
+          <button type="button" data-id="125" data-value="Ship breaking">Ship breaking</button>
+          <button type="button" data-id="115" data-value="Potassium Chlorate">Potassium Chlorate</button>
+          <button type="button" data-id="178" data-value="CNG Sales">CNG Sales</button>
+          <button type="button" data-id="181" data-value="Toll Manufacturing">Toll Manufacturing</button>
+          <button type="button" data-id="138" data-value="Non-Adjustable Supplies">Non-Adjustable Supplies</button>
+          <button type="button" data-id="139" data-value="Goods as per SRO.297(|)/2023">Goods as per SRO.297(|)/2023</button>
 
         </div>
+      </div>
+    </div>
 
 
-        <div class="field sale-type-field">
+    <div class="field uom-field">
+      <label>
+        UOM
+        <span class="req">*</span>
+      </label>
 
-  <label>
-    Sale Type
-    <span class="req">*</span>
-  </label>
+      <div class="searchable-select">
 
-  <div class="searchable-select">
+        <input
+          type="text"
+          class="uom-search"
+          placeholder="Search UOM..."
+          autocomplete="off"
+        >
 
-    <input
-      type="text"
-      class="sale-type-search"
-      placeholder="Search Sale Type..."
-      autocomplete="off"
-    >
+        <input
+          type="hidden"
+          name="items[__INDEX__][uoM]"
+          class="uom-value"
+          required
+        >
 
-    <input
-      type="hidden"
-      name="items[__INDEX__][saleType]"
-      class="sale-type-value"
-    >
+        <div class="uom-options hidden">
 
-    <input
-      type="hidden"
-      class="sale-type-id"
->
+          <button type="button" data-value="MT">MT</button>
+          <button type="button" data-value="Bill of lading">Bill of lading</button>
+          <button type="button" data-value="SET">SET</button>
+          <button type="button" data-value="KWH">KWH</button>
+          <button type="button" data-value="40KG">40KG</button>
+          <button type="button" data-value="Liter">Liter</button>
+          <button type="button" data-value="SqY">SqY</button>
+          <button type="button" data-value="Bag">Bag</button>
+          <button type="button" data-value="KG">KG</button>
+          <button type="button" data-value="MMBTU">MMBTU</button>
+          <button type="button" data-value="Meter">Meter</button>
+          <button type="button" data-value="Pcs">Pcs</button>
+          <button type="button" data-value="Carat">Carat</button>
+          <button type="button" data-value="Cubic Metre">Cubic Metre</button>
+          <button type="button" data-value="Dozen">Dozen</button>
+          <button type="button" data-value="Gram">Gram</button>
+          <button type="button" data-value="Gallon">Gallon</button>
+          <button type="button" data-value="Kilogram">Kilogram</button>
+          <button type="button" data-value="Pound">Pound</button>
+          <button type="button" data-value="Timber Logs">Timber Logs</button>
+          <button type="button" data-value="Numbers, pieces, units">Numbers, pieces, units</button>
+          <button type="button" data-value="Packs">Packs</button>
+          <button type="button" data-value="Pair">Pair</button>
+          <button type="button" data-value="Square Foot">Square Foot</button>
+          <button type="button" data-value="Square Metre">Square Metre</button>
+          <button type="button" data-value="Thousand Unit">Thousand Unit</button>
+          <button type="button" data-value="Mega Watt">Mega Watt</button>
+          <button type="button" data-value="Foot">Foot</button>
+          <button type="button" data-value="Barrels">Barrels</button>
+          <button type="button" data-value="NO">NO</button>
+          <button type="button" data-value="Others">Others</button>
+          <button type="button" data-value="1000 kWh">1000 kWh</button>
 
-    <div class="sale-type-options hidden">
-
-      <button type="button" data-id="75" data-value="Goods at standard rate (default)">Goods at standard rate (default)</button>
-      <button type="button" data-id="24" data-value="Goods at Reduced Rate">Goods at Reduced Rate</button>
-      <button type="button" data-id="80" data-value="Goods at zero-rate">Goods at zero-rate</button>
-      <button type="button" data-id="85" data-value="Petroleum Products">Petroleum Products</button>
-      <button type="button" data-id="62" data-value="Electricity Supply to Retailers">Electricity Supply to Retailers</button>
-      <button type="button" data-id="129" data-value="SIM">SIM</button>
-      <button type="button" data-id="77" data-value="Gas to CNG stations">Gas to CNG stations</button>
-      <button type="button" data-id="122" data-value="Mobile Phones">Mobile Phones</button>
-      <button type="button" data-id="25" data-value="Processing/Conversion of Goods">Processing/Conversion of Goods</button>
-      <button type="button" data-id="23" data-value="3rd Schedule Goods">3rd Schedule Goods</button>
-      <button type="button" data-id="21" data-value="Goods (FED in ST Mode)">Goods (FED in ST Mode)</button>
-      <button type="button" data-id="22" data-value="Services (FED in ST Mode)">Services (FED in ST Mode)</button>
-      <button type="button" data-id="18" data-value="Services">Services</button>
-      <button type="button" data-id="81" data-value="Exempt goods">Exempt goods</button>
-      <button type="button" data-id="82" data-value="DTRE goods">DTRE goods</button>
-      <button type="button" data-id="130" data-value="Cotton ginners">Cotton ginners</button>
-      <button type="button" data-id="132" data-value="Electric Vehicle">Electric Vehicle</button>
-      <button type="button" data-id="134" data-value="Cement /Concrete Block">Cement /Concrete Block</button>
-      <button type="button" data-id="84" data-value="Telecommunication services">Telecommunication services</button>
-      <button type="button" data-id="123" data-value="Steel melting and re-rolling">Steel melting and re-rolling</button>
-      <button type="button" data-id="125" data-value="Ship breaking">Ship breaking</button>
-      <button type="button" data-id="115" data-value="Potassium Chlorate">Potassium Chlorate</button>
-      <button type="button" data-id="178" data-value="CNG Sales">CNG Sales</button>
-      <button type="button" data-id="181" data-value="Toll Manufacturing">Toll Manufacturing</button>
-      <button type="button" data-id="138" data-value="Non-Adjustable Supplies">Non-Adjustable Supplies</button>
-      <button type="button" data-id="139" data-value="Goods as per SRO.297(|)/2023">Goods as per SRO.297(|)/2023</button>
-
+        </div>
+      </div>
     </div>
 
   </div>
 
-</div>
+
+  <!-- ROW 2: QUANTITY / PRICING -->
+  <div class="item-grid-values">
+
+    <div class="field">
+      <label>
+        Quantity
+        <span class="req">*</span>
+      </label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][quantity]"
+        class="quantity"
+        min="0"
+        step="any"
+        required
+        value="1"
+      >
+    </div>
 
 
-        <div class="field">
+    <div class="field">
+      <label>
+        Fixed / Retail Price
+        <span class="req">*</span>
+      </label>
 
-          <label>
-            Rate
-            <span class="req">*</span>
-          </label>
+      <input
+        type="number"
+        name="items[__INDEX__][fixedNotifiedValueOrRetailPrice]"
+        min="0"
+        step="0.01"
+        required
+        value="0"
+      >
+    </div>
 
-          <select
-            name="items[__INDEX__][rate]"
-            class="rate"
-            required
-            disabled
-          >
-          <option value="">
-            Select Sale Type first
-          </option>
+
+    <div class="field">
+      <label>
+        Value Excl. ST
+        <span class="req">*</span>
+      </label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][valueSalesExcludingST]"
+        class="value-excl"
+        min="0"
+        step="0.01"
+        required
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>
+        Rate
+        <span class="req">*</span>
+      </label>
+
+      <select
+        name="items[__INDEX__][rate]"
+        class="rate"
+        required
+        disabled
+      >
+        <option value="">
+          Select Sale Type first
+        </option>
+      </select>
+    </div>
+
+  </div>
+
+
+  <!-- ROW 3: SALES TAX -->
+  <div class="item-grid-values">
+
+    <div class="field">
+      <label>
+        Sales Tax
+        <span class="req">*</span>
+      </label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][salesTaxApplicable]"
+        class="sales-tax"
+        min="0"
+        step="0.01"
+        required
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>
+        ST Withheld
+        <span class="req">*</span>
+      </label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][salesTaxWithheldAtSource]"
+        min="0"
+        step="0.01"
+        required
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>Extra Tax</label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][extraTax]"
+        class="extra-tax"
+        min="0"
+        step="0.01"
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>Further Tax</label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][furtherTax]"
+        class="further-tax"
+        min="0"
+        step="0.01"
+        value="0"
+      >
+    </div>
+
+  </div>
+
+
+  <!-- ROW 4: FINAL VALUES / SRO -->
+  <div class="item-grid-values">
+
+    <div class="field">
+      <label>FED Payable</label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][fedPayable]"
+        class="fed-payable"
+        min="0"
+        step="0.01"
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>Discount</label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][discount]"
+        class="discount"
+        min="0"
+        step="0.01"
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>
+        Total Values
+        <span class="req">*</span>
+      </label>
+
+      <input
+        type="number"
+        name="items[__INDEX__][totalValues]"
+        class="total-values"
+        min="0"
+        step="0.01"
+        required
+        value="0"
+      >
+    </div>
+
+
+    <div class="field">
+      <label>SRO Schedule No.</label>
+
+      <select
+        name="items[__INDEX__][sroScheduleNo]"
+        class="sro-schedule"
+        disabled
+      >
+        <option value="">Select rate first</option>
       </select>
 
-        </div>
-
-
-       <div class="field uom-field">
-
-  <label>
-    UOM
-    <span class="req">*</span>
-  </label>
-
-  <div class="searchable-select">
-
-    <input
-      type="text"
-      class="uom-search"
-      placeholder="Search UOM..."
-      autocomplete="off"
-    >
-
-    <input
-      type="hidden"
-      name="items[__INDEX__][uoM]"
-      class="uom-value"
-      required
-    >
-
-    <div class="uom-options hidden">
-
-      <button type="button" data-value="MT">MT</button>
-      <button type="button" data-value="Bill of lading">Bill of lading</button>
-      <button type="button" data-value="SET">SET</button>
-      <button type="button" data-value="KWH">KWH</button>
-      <button type="button" data-value="40KG">40KG</button>
-      <button type="button" data-value="Liter">Liter</button>
-      <button type="button" data-value="SqY">SqY</button>
-      <button type="button" data-value="Bag">Bag</button>
-      <button type="button" data-value="KG">KG</button>
-      <button type="button" data-value="MMBTU">MMBTU</button>
-      <button type="button" data-value="Meter">Meter</button>
-      <button type="button" data-value="Pcs">Pcs</button>
-      <button type="button" data-value="Carat">Carat</button>
-      <button type="button" data-value="Cubic Metre">Cubic Metre</button>
-      <button type="button" data-value="Dozen">Dozen</button>
-      <button type="button" data-value="Gram">Gram</button>
-      <button type="button" data-value="Gallon">Gallon</button>
-      <button type="button" data-value="Kilogram">Kilogram</button>
-      <button type="button" data-value="Pound">Pound</button>
-      <button type="button" data-value="Timber Logs">Timber Logs</button>
-      <button type="button" data-value="Numbers, pieces, units">Numbers, pieces, units</button>
-      <button type="button" data-value="Packs">Packs</button>
-      <button type="button" data-value="Pair">Pair</button>
-      <button type="button" data-value="Square Foot">Square Foot</button>
-      <button type="button" data-value="Square Metre">Square Metre</button>
-      <button type="button" data-value="Thousand Unit">Thousand Unit</button>
-      <button type="button" data-value="Mega Watt">Mega Watt</button>
-      <button type="button" data-value="Foot">Foot</button>
-      <button type="button" data-value="Barrels">Barrels</button>
-      <button type="button" data-value="NO">NO</button>
-      <button type="button" data-value="Others">Others</button>
-      <button type="button" data-value="1000 kWh">1000 kWh</button>
-
+      <input
+        type="hidden"
+        class="sro-id"
+      >
     </div>
 
   </div>
 
-</div>
 
-      </div>
-
-
-      <!-- =====================================================
-           ITEM VALUES
-      ====================================================== -->
-
-      <div class="item-grid-values">
-
-
-        <div class="field">
-
-          <label>
-            Description
-            <span class="req">*</span>
-          </label>
-
-          <input
-            type="text"
-            name="items[__INDEX__][productDescription]"
-            class="product-description"
-            required
-            placeholder="Product / service description"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Quantity
-            <span class="req">*</span>
-          </label>
-
-          <input
-            type="number"
-            name="items[__INDEX__][quantity]"
-            class="quantity"
-            min="0"
-            step="any"
-            required
-            value="1"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Value Excl. ST
-            <span class="req">*</span>
-          </label>
-
-          <input
-            type="number"
-            name="items[__INDEX__][valueSalesExcludingST]"
-            class="value-excl"
-            min="0"
-            step="0.01"
-            required
-            value="0"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Sales Tax
-            <span class="req">*</span>
-          </label>
-
-          <input
-            type="number"
-            name="items[__INDEX__][salesTaxApplicable]"
-            class="sales-tax"
-            min="0"
-            step="0.01"
-            required
-            value="0"
-          >
-
-        </div>
-
-      </div>
-
-
-      <!-- =====================================================
-           ADVANCED TAX FIELDS
-      ====================================================== -->
-
-      <details class="advanced-tax">
-
-        <summary>
-          Advanced FBR tax / SRO fields
-        </summary>
-
-
-        <div class="advanced-grid">
-
-
-          <div class="field">
-
-            <label>
-              Total Values
-              <span class="req">*</span>
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][totalValues]"
-              class="total-values"
-              min="0"
-              step="0.01"
-              required
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Fixed / Retail Price
-              <span class="req">*</span>
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][fixedNotifiedValueOrRetailPrice]"
-              min="0"
-              step="0.01"
-              required
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              ST Withheld
-              <span class="req">*</span>
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][salesTaxWithheldAtSource]"
-              min="0"
-              step="0.01"
-              required
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Extra Tax
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][extraTax]"
-              class="extra-tax"
-              min="0"
-              step="0.01"
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Further Tax
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][furtherTax]"
-              class="further-tax"
-              min="0"
-              step="0.01"
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              FED Payable
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][fedPayable]"
-              class="fed-payable"
-              min="0"
-              step="0.01"
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Discount
-            </label>
-
-            <input
-              type="number"
-              name="items[__INDEX__][discount]"
-              class="discount"
-              min="0"
-              step="0.01"
-              value="0"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              SRO Schedule No.
-            </label>
-
-            <input
-              type="text"
-              name="items[__INDEX__][sroScheduleNo]"
-              placeholder="Enter SRO schedule"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              SRO Item Serial No.
-            </label>
-
-            <input
-              type="text"
-              name="items[__INDEX__][sroItemSerialNo]"
-              placeholder="Enter SRO item serial"
-            >
-
-          </div>
-
-        </div>
-
-      </details>
-
-
-      <div class="item-hint">
-        Enter the exact values expected by the FBR Digital Invoicing payload.
-      </div>
-
+  <!-- ROW 5: SRO ITEM -->
+  <div class="item-grid-values">
+
+    <div class="field">
+      <label>SRO Item Serial No.</label>
+
+      <select
+        name="items[__INDEX__][sroItemSerialNo]"
+        class="sro-item"
+        disabled
+      >
+        <option value="">Select SRO schedule first</option>
+      </select>
+
+      <input
+        type="hidden"
+        class="sro-item-id"
+      >
     </div>
 
+  </div>
+
+
+  <div class="item-hint">
+    Enter the exact values expected by the FBR Digital Invoicing payload.
+  </div>
+
+</div>
   </section>
 
 </template>
@@ -2128,6 +2082,223 @@ async function loadRates(item) {
   });
 
 });
+
+
+
+  // =============================================================
+  // SUBMIT FORM TO FBR
+  // =============================================================
+
+  $("#invoice-form").addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    const form = event.currentTarget;
+
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    // Searchable controls store their actual FBR values in hidden inputs.
+    for (const item of $$(".invoice-item")) {
+
+      const saleTypeSearch = $(".sale-type-search", item);
+      const saleTypeValue = $(".sale-type-value", item);
+
+      if (!saleTypeValue?.value) {
+        saleTypeSearch?.setCustomValidity("Please select a Sale Type.");
+        saleTypeSearch?.reportValidity();
+        return;
+      }
+
+      const uomSearch = $(".uom-search", item);
+      const uomValue = $(".uom-value", item);
+
+      if (!uomValue?.value) {
+        uomSearch?.setCustomValidity("Please select a UOM.");
+        uomSearch?.reportValidity();
+        return;
+      }
+    }
+
+    const numberValue = (item, selector) =>
+      Number($(selector, item)?.value || 0);
+
+    const payload = {
+      environment: $("#environment").value,
+      invoiceType: $("#invoiceType").value,
+      invoiceDate: $("#invoiceDate").value,
+
+      sellerNTNCNIC:
+        form.elements["sellerNTNCNIC"].value,
+
+      sellerBusinessName:
+        form.elements["sellerBusinessName"].value,
+
+      sellerProvince:
+        form.elements["sellerProvince"].value,
+
+      sellerAddress:
+        form.elements["sellerAddress"].value,
+
+      buyerNTNCNIC:
+        $("#buyerNTNCNIC").value,
+
+      buyerBusinessName:
+        form.elements["buyerBusinessName"].value,
+
+      buyerProvince:
+        $("#buyerProvince").value,
+
+      buyerAddress:
+        form.elements["buyerAddress"].value,
+
+      buyerRegistrationType:
+        $("#buyerRegistrationType").value,
+
+      items: $$(".invoice-item").map(item => ({
+        hsCode:
+          $(".hs-code", item).value.trim(),
+
+        productDescription:
+          $(".product-description", item).value.trim(),
+
+        rate:
+          $(".rate", item).value,
+
+        uoM:
+          $(".uom-value", item).value,
+
+        quantity:
+          numberValue(item, ".quantity"),
+
+        totalValues:
+          numberValue(item, ".total-values"),
+
+        valueSalesExcludingST:
+          numberValue(item, ".value-excl"),
+
+        fixedNotifiedValueOrRetailPrice:
+          numberValue(
+            item,
+            '[name*="[fixedNotifiedValueOrRetailPrice]"]'
+          ),
+
+        salesTaxApplicable:
+          numberValue(item, ".sales-tax"),
+
+        salesTaxWithheldAtSource:
+          numberValue(
+            item,
+            '[name*="[salesTaxWithheldAtSource]"]'
+          ),
+
+        extraTax:
+          numberValue(item, ".extra-tax"),
+
+        furtherTax:
+          numberValue(item, ".further-tax"),
+
+        sroScheduleNo:
+          $(".sro-schedule", item)?.value || "",
+
+        fedPayable:
+          numberValue(item, ".fed-payable"),
+
+        discount:
+          numberValue(item, ".discount"),
+
+        saleType:
+          $(".sale-type-value", item).value,
+
+        sroItemSerialNo:
+          $(".sro-item", item)?.value || ""
+      }))
+    };
+
+    const invoiceRefNo =
+      $("#invoiceRefNo").value.trim();
+
+    if (invoiceRefNo) {
+      payload.invoiceRefNo = invoiceRefNo;
+    }
+
+    if ($("#environment").value === "sandbox") {
+
+      const scenarioId =
+        $("#scenarioId").value.trim();
+
+      if (scenarioId) {
+        payload.scenarioId = scenarioId;
+      }
+    }
+
+    console.log(
+      "FBR payload:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    const submitButtons =
+      $$('button[type="submit"]', form);
+
+    submitButtons.forEach(button => {
+      button.disabled = true;
+    });
+
+    try {
+
+      const response = await fetch(
+        "/invoices/submit",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      const result = await response.json();
+
+      console.log("FBR response:", result);
+
+      if (!response.ok) {
+
+        alert(
+          result.message ||
+          "FBR submission failed."
+        );
+
+        return;
+      }
+
+      alert(
+        "Invoice submitted successfully to FBR.\n" +
+        "FBR Invoice #: " +
+        (result.invoice_number || "-")
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Invoice submission error:",
+        error
+      );
+
+      alert(
+        "Unable to submit invoice to FBR."
+      );
+
+    } finally {
+
+      submitButtons.forEach(button => {
+        button.disabled = false;
+      });
+
+    }
+
+  });
 
 
   // =============================================================
