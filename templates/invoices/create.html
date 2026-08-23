@@ -10,771 +10,1574 @@
 {% block content %}
 
 <style>
-  .invoice-form-shell { display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:1rem; align-items:start; }
-  .invoice-main { display:flex; flex-direction:column; gap:1rem; min-width:0; }
-  .invoice-side { display:flex; flex-direction:column; gap:1rem; position:sticky; top:68px; }
-  .section-note { font-size:11.5px; color:var(--text-muted); }
-  .environment-row { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
-  .environment-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border:1px solid var(--border); border-radius:99px; font-size:12px; background:var(--surface-2); }
-  .environment-pill::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--warning-text); }
-  .environment-pill.production::before { background:var(--success-text); }
-  .seller-summary { display:grid; grid-template-columns:1fr 1fr; gap:.7rem 1rem; }
-  .summary-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
-  .summary-value { margin-top:2px; font-size:13.5px; font-weight:500; }
-  .ref-badge { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--accent-text); background:var(--accent-bg); border:1px solid var(--accent-border); border-radius:99px; padding:2px 7px; }
-  .field-inline { display:flex; gap:.5rem; align-items:flex-end; }
-  .field-inline .field { flex:1; }
-  .lookup-status { min-height:18px; margin-top:5px; font-size:11.5px; color:var(--text-muted); }
-  .lookup-status.ok { color:var(--success-text); }
-  .lookup-status.error { color:var(--danger-text); }
-  .invoice-item { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); overflow:hidden; }
-  .invoice-item-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.7rem .9rem; background:var(--surface-2); border-bottom:1px solid var(--border); }
-  .invoice-item-title { display:flex; align-items:center; gap:.65rem; min-width:0; }
-  .item-number { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:700; flex-shrink:0; }
-  .item-description-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .invoice-item-body { padding:.9rem; }
-  .item-grid-primary { display:grid; grid-template-columns:1.25fr 1fr 1fr 1fr; gap:.75rem; }
-  .item-grid-values { display:grid; grid-template-columns:repeat(4, 1fr); gap:.75rem; margin-top:.75rem; }
-  .loading-select { opacity:.65; pointer-events:none; }
-  .advanced-tax { margin-top:.8rem; border-top:1px solid var(--border); padding-top:.75rem; }
-  .advanced-tax summary { cursor:pointer; color:var(--text-secondary); font-size:12px; font-weight:500; user-select:none; }
-  .advanced-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; margin-top:.75rem; }
-  .item-hint { margin-top:.55rem; font-size:11px; color:var(--text-muted); }
-  .summary-list { display:flex; flex-direction:column; gap:.55rem; }
-  .summary-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; font-size:12.5px; }
-  .summary-row strong { font-family:var(--font-mono); font-size:12.5px; }
-  .summary-row.grand { border-top:1px solid var(--border); padding-top:.7rem; margin-top:.2rem; font-size:14px; }
-  .summary-row.grand strong { font-size:14px; }
-  .submit-stack { display:flex; flex-direction:column; gap:.6rem; }
-  .submit-stack .btn { justify-content:center; width:100%; }
-  .fbr-info { padding:.75rem; border-radius:var(--radius); background:var(--accent-bg); border:1px solid var(--accent-border); color:var(--accent-text); font-size:11.5px; line-height:1.5; }
-  .muted-box { padding:.7rem; border:1px dashed var(--border-strong); border-radius:var(--radius); color:var(--text-muted); font-size:11.5px; }
-  .hidden { display:none !important; }
-  @media (max-width:1180px) {
-    .invoice-form-shell { grid-template-columns:1fr; }
-    .invoice-side { position:static; }
+  .invoice-form-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 1rem;
+    align-items: start;
   }
-  @media (max-width:800px) {
-    .item-grid-primary, .item-grid-values, .advanced-grid, .seller-summary { grid-template-columns:1fr 1fr; }
+
+  .invoice-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
   }
-  @media (max-width:520px) {
-    .item-grid-primary, .item-grid-values, .advanced-grid, .seller-summary, .form-grid-2 { grid-template-columns:1fr; }
+
+  .invoice-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 68px;
+  }
+
+  .section-note {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+
+  .environment-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .environment-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-size: 12px;
+    background: var(--surface-2);
+  }
+
+  .environment-pill::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--warning-text);
+  }
+
+  .environment-pill.production::before {
+    background: var(--success-text);
+  }
+
+  .seller-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .7rem 1rem;
+  }
+
+  .summary-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .summary-value {
+    margin-top: 2px;
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  .ref-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    color: var(--accent-text);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 99px;
+    padding: 2px 7px;
+  }
+
+  .invoice-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .invoice-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: .7rem .9rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .invoice-item-title {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-width: 0;
+  }
+
+  .item-number {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .item-description-title {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .invoice-item-body {
+    padding: .9rem;
+  }
+
+  .item-grid-primary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .75rem;
+  }
+
+  .item-grid-values {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .75rem;
+    margin-top: .75rem;
+  }
+
+  .advanced-tax {
+    margin-top: .8rem;
+    border-top: 1px solid var(--border);
+    padding-top: .75rem;
+  }
+
+  .advanced-tax summary {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  .advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .75rem;
+    margin-top: .75rem;
+  }
+
+  .item-hint {
+    margin-top: .55rem;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+
+  .summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 12.5px;
+  }
+
+  .summary-row strong {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .summary-row.grand {
+    border-top: 1px solid var(--border);
+    padding-top: .7rem;
+    margin-top: .2rem;
+    font-size: 14px;
+  }
+
+  .summary-row.grand strong {
+    font-size: 14px;
+  }
+
+  .submit-stack {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+
+  .submit-stack .btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .fbr-info {
+    padding: .75rem;
+    border-radius: var(--radius);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-text);
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  .muted-box {
+    padding: .7rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-size: 11.5px;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  @media (max-width: 1180px) {
+    .invoice-form-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .invoice-side {
+      position: static;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .item-grid-primary,
+    .item-grid-values,
+    .advanced-grid,
+    .seller-summary {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .item-grid-primary,
+    .item-grid-values,
+    .advanced-grid,
+    .seller-summary,
+    .form-grid-2 {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
-<form id="invoice-form" method="POST" action="/invoices/create">
+
+<form
+  id="invoice-form"
+  method="POST"
+  action="/invoices/create"
+>
+
   <div class="invoice-form-shell">
 
+    <!-- =========================================================
+         LEFT SIDE
+    ========================================================== -->
     <div class="invoice-main">
 
-      <!-- Invoice / environment -->
+      <!-- =====================================================
+           INVOICE DETAILS
+      ====================================================== -->
       <div class="card">
+
         <div class="card-header">
           <span class="card-title">Invoice Details</span>
-          <span class="ref-badge">FBR DI payload</span>
+          <span class="ref-badge">FBR DI Payload</span>
         </div>
+
         <div class="card-body">
+
           <div class="form-grid-2 mb-3">
-            <div class="field">
-              <label>Environment <span class="req">*</span></label>
-              <select name="environment" id="environment" required>
-                <option value="sandbox" selected>Sandbox</option>
-                <option value="production">Production</option>
-              </select>
-              <span class="hint">Determines which tenant token is used server-side.</span>
-            </div>
 
             <div class="field">
-              <label>Invoice Type <span class="req">*</span></label>
-              <select name="invoiceType" id="invoiceType" required>
-                <option value="">Loading FBR document types…</option>
+
+              <label>
+                Environment
+                <span class="req">*</span>
+              </label>
+
+              <select
+                name="environment"
+                id="environment"
+                required
+              >
+                <option value="sandbox" selected>
+                  Sandbox
+                </option>
+
+                <option value="production">
+                  Production
+                </option>
               </select>
-              <span class="hint">Loaded from FBR Document Type reference data.</span>
+
+              <span class="hint">
+                Determines which tenant FBR token is used server-side.
+              </span>
+
             </div>
+
+
+            <div class="field">
+
+              <label>
+                Invoice Type
+                <span class="req">*</span>
+              </label>
+
+              <select
+                name="invoiceType"
+                id="invoiceType"
+                required
+              >
+
+                <option value="Sale Invoice" selected>
+                  Sale Invoice
+                </option>
+
+                <option value="Debit Note">
+                  Debit Note
+                </option>
+
+              </select>
+
+            </div>
+
           </div>
+
 
           <div class="form-grid-2">
+
             <div class="field">
-              <label>Invoice Date <span class="req">*</span></label>
-              <input type="date" name="invoiceDate" id="invoiceDate" value="{{ today }}" required>
+
+              <label>
+                Invoice Date
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="date"
+                name="invoiceDate"
+                id="invoiceDate"
+                value="{{ today }}"
+                required
+              >
+
             </div>
 
-            <div class="field" id="invoice-reference-field">
-              <label>Invoice Reference No.</label>
-              <input type="text" name="invoiceRefNo" id="invoiceRefNo" placeholder="Required for Debit Note">
+
+            <div class="field">
+
+              <label>
+                Invoice Reference No.
+              </label>
+
+              <input
+                type="text"
+                name="invoiceRefNo"
+                id="invoiceRefNo"
+                placeholder="Required for Debit Note"
+              >
+
             </div>
+
           </div>
 
-          <div class="field mt-3" id="scenario-field">
-            <label>Sandbox Scenario <span class="req">*</span></label>
-            <select name="scenarioId" id="scenarioId">
-              <option value="">Select scenario</option>
-              {% for scenario in scenarios|default([]) %}
-                <option value="{{ scenario.id }}">{{ scenario.id }} — {{ scenario.description }}</option>
-              {% endfor %}
-            </select>
-            <span class="hint">Only sent in sandbox. Populate these from your supported scenario configuration.</span>
+
+          <div
+            class="field mt-3"
+            id="scenario-field"
+          >
+
+            <label>
+              Sandbox Scenario
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="scenarioId"
+              id="scenarioId"
+              placeholder="e.g. SN001"
+            >
+
+            <span class="hint">
+              Only submitted in sandbox.
+            </span>
+
           </div>
+
         </div>
+
       </div>
 
-      <!-- Seller -->
+
+      <!-- =====================================================
+           SELLER
+      ====================================================== -->
       <div class="card">
+
         <div class="card-header">
           <span class="card-title">Seller</span>
           <span class="section-note">From active tenant</span>
         </div>
+
         <div class="card-body">
+
           <div class="seller-summary">
+
             <div>
-              <div class="summary-label">Business Name</div>
-              <div class="summary-value">{{ request.session.get("tenant_name", "No Tenant") }}</div>
+              <div class="summary-label">
+                Business Name
+              </div>
+
+              <div class="summary-value">
+                {{ request.session.get("tenant_name", "No Tenant") }}
+              </div>
             </div>
+
+
             <div>
-              <div class="summary-label">NTN / CNIC</div>
-              <div class="summary-value">{{ request.session.get("tenant_ntn") or "-" }}</div>
+              <div class="summary-label">
+                NTN / CNIC
+              </div>
+
+              <div class="summary-value">
+                {{ request.session.get("tenant_ntn") or "-" }}
+              </div>
             </div>
+
+
             <div>
-              <div class="summary-label">Province</div>
-              <div class="summary-value">{{ request.session.get("tenant_province") or "-" }}</div>
+              <div class="summary-label">
+                Province
+              </div>
+
+              <div class="summary-value">
+                {{ request.session.get("tenant_province") or "-" }}
+              </div>
             </div>
+
+
             <div>
-              <div class="summary-label">Address</div>
-              <div class="summary-value">{{ request.session.get("tenant_address") or "-" }}</div>
+              <div class="summary-label">
+                Address
+              </div>
+
+              <div class="summary-value">
+                {{ request.session.get("tenant_address") or "-" }}
+              </div>
             </div>
+
           </div>
 
-          <!-- Exact FBR payload values still submit with the form -->
-          <input type="hidden" name="sellerNTNCNIC" value="{{ request.session.get("tenant_ntn", "") }}">
-          <input type="hidden" name="sellerBusinessName" value="{{ request.session.get("tenant_name", "") }}">
-          <input type="hidden" name="sellerProvince" id="sellerProvince" value="{{ request.session.get("tenant_province", "") }}">
-          <input type="hidden" id="sellerProvinceId" value="{{ request.session.get("tenant_province_id", "") }}">
-          <input type="hidden" name="sellerAddress" value="{{ request.session.get("tenant_address", "") }}">
+
+          <!-- Seller FBR payload fields -->
+
+          <input
+            type="hidden"
+            name="sellerNTNCNIC"
+            value="{{ request.session.get('tenant_ntn', '') }}"
+          >
+
+          <input
+            type="hidden"
+            name="sellerBusinessName"
+            value="{{ request.session.get('tenant_name', '') }}"
+          >
+
+          <input
+            type="hidden"
+            name="sellerProvince"
+            value="{{ request.session.get('tenant_province', '') }}"
+          >
+
+          <input
+            type="hidden"
+            name="sellerAddress"
+            value="{{ request.session.get('tenant_address', '') }}"
+          >
+
         </div>
+
       </div>
 
-      Buyer
+
+      <!-- =====================================================
+           BUYER
+      ====================================================== -->
       <div class="card">
+
         <div class="card-header">
           <span class="card-title">Buyer</span>
-          <span class="ref-badge">Province + STRN status</span>
         </div>
+
         <div class="card-body">
+
           <div class="form-grid-2 mb-3">
-            <div class="field">
-              <label>Registration Type <span class="req">*</span></label>
-              <select name="buyerRegistrationType" id="buyerRegistrationType" required>
-                <option value="Registered">Registered</option>
-                <option value="Unregistered">Unregistered</option>
-              </select>
-            </div>
 
             <div class="field">
-              <label>NTN / CNIC</label>
-              <div class="field-inline">
-                <div class="field">
-                  <input type="text" name="buyerNTNCNIC" id="buyerNTNCNIC" placeholder="7 or 13 digits">
-                </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="check-buyer-status">Check FBR</button>
-              </div>
-              <div id="buyer-status" class="lookup-status">Required for a registered buyer.</div>
+
+              <label>
+                Registration Type
+                <span class="req">*</span>
+              </label>
+
+              <select
+                name="buyerRegistrationType"
+                id="buyerRegistrationType"
+                required
+              >
+
+                <option value="Registered">
+                  Registered
+                </option>
+
+                <option value="Unregistered">
+                  Unregistered
+                </option>
+
+              </select>
+
             </div>
+
+
+            <div class="field">
+
+              <label>
+                NTN / CNIC
+              </label>
+
+              <input
+                type="text"
+                name="buyerNTNCNIC"
+                id="buyerNTNCNIC"
+                placeholder="7 or 13 digits"
+              >
+
+              <span
+                class="hint"
+                id="buyer-ntn-hint"
+              >
+                Required for registered buyer.
+              </span>
+
+            </div>
+
           </div>
+
 
           <div class="field mb-3">
-            <label>Buyer Business Name <span class="req">*</span></label>
-            <input type="text" name="buyerBusinessName" required placeholder="Buyer business name">
+
+            <label>
+              Buyer Business Name
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="buyerBusinessName"
+              required
+              placeholder="Buyer business name"
+            >
+
           </div>
+
 
           <div class="form-grid-2">
-            <div class="field">
-              <label>Buyer Province <span class="req">*</span></label>
-              <select name="buyerProvince" id="buyerProvince" required>
-                <option value="Sindh">Sindh</option>
-                <option value="Punjab">Punjab</option>
-              </select>
-            </div>
 
             <div class="field">
-              <label>Buyer Address <span class="req">*</span></label>
-              <input type="text" name="buyerAddress" required placeholder="Buyer address">
+
+              <label>
+                Buyer Province
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="text"
+                name="buyerProvince"
+                id="buyerProvince"
+                required
+                placeholder="e.g. Sindh"
+              >
+
             </div>
+
+
+            <div class="field">
+
+              <label>
+                Buyer Address
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="text"
+                name="buyerAddress"
+                required
+                placeholder="Buyer address"
+              >
+
+            </div>
+
           </div>
+
         </div>
+
       </div>
 
-      <!-- Items -->
+
+      <!-- =====================================================
+           ITEMS
+      ====================================================== -->
       <div class="card">
+
         <div class="card-header">
+
           <div>
-            <span class="card-title">Invoice Items</span>
-            <div class="section-note">HS Code → Sale Type → Rate → UOM / SRO dependencies</div>
+            <span class="card-title">
+              Invoice Items
+            </span>
+
+            <div class="section-note">
+              Enter FBR invoice item fields manually
+            </div>
           </div>
-          <button type="button" class="btn btn-secondary btn-sm" id="add-item">+ Add Item</button>
+
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            id="add-item"
+          >
+            + Add Item
+          </button>
+
         </div>
-        <div class="card-body" id="items-container" style="display:flex;flex-direction:column;gap:.85rem;"></div>
+
+
+        <div
+          class="card-body"
+          id="items-container"
+          style="
+            display:flex;
+            flex-direction:column;
+            gap:.85rem;
+          "
+        >
+        </div>
+
       </div>
+
     </div>
 
-    <!-- Right summary -->
+
+    <!-- =========================================================
+         RIGHT SIDE
+    ========================================================== -->
     <aside class="invoice-side">
+
       <div class="card">
+
         <div class="card-header">
-          <span class="card-title">FBR Submission</span>
+          <span class="card-title">
+            FBR Submission
+          </span>
         </div>
+
         <div class="card-body">
+
           <div class="environment-row mb-3">
-            <span id="environment-pill" class="environment-pill">Sandbox</span>
+
+            <span
+              id="environment-pill"
+              class="environment-pill"
+            >
+              Sandbox
+            </span>
+
           </div>
+
 
           <div class="fbr-info mb-3">
-            Reference data is resolved through your backend FBR services using the active tenant's token. The browser should never receive the FBR bearer token.
+
+            Reference fields are currently entered manually.
+
+            Your backend should still validate the final payload with FBR
+            before submitting the invoice.
+
           </div>
+
 
           <div class="summary-list mb-3">
-            <div class="summary-row"><span>Items</span><strong id="summary-items">0</strong></div>
-            <div class="summary-row"><span>Value excl. ST</span><strong id="summary-exclusive">0.00</strong></div>
-            <div class="summary-row"><span>Sales Tax</span><strong id="summary-tax">0.00</strong></div>
-            <div class="summary-row"><span>Further / Extra / FED</span><strong id="summary-other-tax">0.00</strong></div>
-            <div class="summary-row"><span>Discount</span><strong id="summary-discount">0.00</strong></div>
-            <div class="summary-row grand"><span>Total</span><strong id="summary-total">0.00</strong></div>
+
+            <div class="summary-row">
+              <span>Items</span>
+              <strong id="summary-items">0</strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Value excl. ST</span>
+              <strong id="summary-exclusive">0.00</strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Sales Tax</span>
+              <strong id="summary-tax">0.00</strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Further / Extra / FED</span>
+              <strong id="summary-other-tax">0.00</strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Discount</span>
+              <strong id="summary-discount">0.00</strong>
+            </div>
+
+            <div class="summary-row grand">
+              <span>Total</span>
+              <strong id="summary-total">0.00</strong>
+            </div>
+
           </div>
+
 
           <div class="submit-stack">
-            <button type="submit" name="action" value="validate" class="btn btn-secondary">Validate with FBR</button>
-            <button type="submit" name="action" value="submit" class="btn btn-primary">Submit Invoice to FBR</button>
+
+            <button
+              type="submit"
+              name="action"
+              value="validate"
+              class="btn btn-secondary"
+            >
+              Validate with FBR
+            </button>
+
+
+            <button
+              type="submit"
+              name="action"
+              value="submit"
+              class="btn btn-primary"
+            >
+              Submit Invoice to FBR
+            </button>
+
           </div>
+
         </div>
+
       </div>
+
 
       <div class="muted-box">
-        Production submissions omit <code>scenarioId</code>. Debit Notes require <code>invoiceRefNo</code>. Dependent reference selections should be revalidated server-side before posting to FBR.
+
+        Production submissions should omit
+        <code>scenarioId</code>.
+
+        Debit Notes require
+        <code>invoiceRefNo</code>.
+
       </div>
+
     </aside>
+
   </div>
+
 </form>
 
+
+<!-- =============================================================
+     ITEM TEMPLATE
+============================================================== -->
+
 <template id="invoice-item-template">
-  <section class="invoice-item" data-item-index="__INDEX__">
+
+  <section
+    class="invoice-item"
+    data-item-index="__INDEX__"
+  >
+
     <div class="invoice-item-header">
+
       <div class="invoice-item-title">
-        <span class="item-number">__NUMBER__</span>
-        <span class="item-description-title">New invoice item</span>
+
+        <span class="item-number">
+          __NUMBER__
+        </span>
+
+        <span class="item-description-title">
+          New invoice item
+        </span>
+
       </div>
-      <button type="button" class="del-btn remove-item" title="Remove item">×</button>
+
+
+      <button
+        type="button"
+        class="del-btn remove-item"
+        title="Remove item"
+      >
+        ×
+      </button>
+
     </div>
+
 
     <div class="invoice-item-body">
+
+
+      <!-- =====================================================
+           FBR ITEM CLASSIFICATION
+      ====================================================== -->
+
       <div class="item-grid-primary">
-        <div class="field">
-          <label>HS Code <span class="req">*</span></label>
-          <input type="text" class="hs-search" placeholder="e.g. 6903.1000" autocomplete="off" required>
-          <select class="hs-results" size="5" style="display:none;margin-top:4px;"></select>
-          <input type="hidden" name="items[__INDEX__][hsCode]" class="hs-value">
-        </div>
+
 
         <div class="field">
-          <label>Sale Type <span class="req">*</span></label>
-          <select name="items[__INDEX__][saleType]" class="sale-type" required>
-            <option value="">Loading…</option>
-          </select>
-          <input type="hidden" class="sale-type-id">
+
+          <label>
+            HS Code
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="text"
+            name="items[__INDEX__][hsCode]"
+            class="hs-code"
+            required
+            placeholder="e.g. 6903.1000"
+          >
+
         </div>
 
-        <div class="field">
-          <label>Rate <span class="req">*</span></label>
-          <select name="items[__INDEX__][rate]" class="rate" required disabled>
-            <option value="">Select sale type first</option>
-          </select>
-          <input type="hidden" class="rate-id">
-        </div>
 
         <div class="field">
-          <label>UOM <span class="req">*</span></label>
-          <select name="items[__INDEX__][uoM]" class="uom" required disabled>
-            <option value="">Select HS code + sale type</option>
-          </select>
-          <input type="hidden" class="uom-id">
+
+          <label>
+            Sale Type
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="text"
+            name="items[__INDEX__][saleType]"
+            class="sale-type"
+            required
+            placeholder="Enter FBR sale type"
+          >
+
         </div>
+
+
+        <div class="field">
+
+          <label>
+            Rate
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="text"
+            name="items[__INDEX__][rate]"
+            class="rate"
+            required
+            placeholder="e.g. 18%"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            UOM
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="text"
+            name="items[__INDEX__][uoM]"
+            class="uom"
+            required
+            placeholder="e.g. Numbers"
+          >
+
+        </div>
+
       </div>
+
+
+      <!-- =====================================================
+           ITEM VALUES
+      ====================================================== -->
 
       <div class="item-grid-values">
+
+
         <div class="field">
-          <label>Description <span class="req">*</span></label>
-          <input type="text" name="items[__INDEX__][productDescription]" class="product-description" required placeholder="Product / service description">
+
+          <label>
+            Description
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="text"
+            name="items[__INDEX__][productDescription]"
+            class="product-description"
+            required
+            placeholder="Product / service description"
+          >
+
         </div>
+
+
         <div class="field">
-          <label>Quantity <span class="req">*</span></label>
-          <input type="number" name="items[__INDEX__][quantity]" class="quantity" min="0" step="any" required value="1">
+
+          <label>
+            Quantity
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="number"
+            name="items[__INDEX__][quantity]"
+            class="quantity"
+            min="0"
+            step="any"
+            required
+            value="1"
+          >
+
         </div>
+
+
         <div class="field">
-          <label>Value Excl. ST <span class="req">*</span></label>
-          <input type="number" name="items[__INDEX__][valueSalesExcludingST]" class="value-excl" min="0" step="0.01" required value="0">
+
+          <label>
+            Value Excl. ST
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="number"
+            name="items[__INDEX__][valueSalesExcludingST]"
+            class="value-excl"
+            min="0"
+            step="0.01"
+            required
+            value="0"
+          >
+
         </div>
+
+
         <div class="field">
-          <label>Sales Tax <span class="req">*</span></label>
-          <input type="number" name="items[__INDEX__][salesTaxApplicable]" class="sales-tax" min="0" step="0.01" required value="0">
+
+          <label>
+            Sales Tax
+            <span class="req">*</span>
+          </label>
+
+          <input
+            type="number"
+            name="items[__INDEX__][salesTaxApplicable]"
+            class="sales-tax"
+            min="0"
+            step="0.01"
+            required
+            value="0"
+          >
+
         </div>
+
       </div>
 
+
+      <!-- =====================================================
+           ADVANCED TAX FIELDS
+      ====================================================== -->
+
       <details class="advanced-tax">
-        <summary>Advanced FBR tax / SRO fields</summary>
+
+        <summary>
+          Advanced FBR tax / SRO fields
+        </summary>
+
+
         <div class="advanced-grid">
+
+
           <div class="field">
-            <label>Total Values <span class="req">*</span></label>
-            <input type="number" name="items[__INDEX__][totalValues]" class="total-values" min="0" step="0.01" required value="0">
+
+            <label>
+              Total Values
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][totalValues]"
+              class="total-values"
+              min="0"
+              step="0.01"
+              required
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>Fixed / Retail Price <span class="req">*</span></label>
-            <input type="number" name="items[__INDEX__][fixedNotifiedValueOrRetailPrice]" min="0" step="0.01" required value="0">
+
+            <label>
+              Fixed / Retail Price
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][fixedNotifiedValueOrRetailPrice]"
+              min="0"
+              step="0.01"
+              required
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>ST Withheld <span class="req">*</span></label>
-            <input type="number" name="items[__INDEX__][salesTaxWithheldAtSource]" min="0" step="0.01" required value="0">
+
+            <label>
+              ST Withheld
+              <span class="req">*</span>
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][salesTaxWithheldAtSource]"
+              min="0"
+              step="0.01"
+              required
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>Extra Tax</label>
-            <input type="number" name="items[__INDEX__][extraTax]" class="extra-tax" min="0" step="0.01" value="0">
+
+            <label>
+              Extra Tax
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][extraTax]"
+              class="extra-tax"
+              min="0"
+              step="0.01"
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>Further Tax</label>
-            <input type="number" name="items[__INDEX__][furtherTax]" class="further-tax" min="0" step="0.01" value="0">
+
+            <label>
+              Further Tax
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][furtherTax]"
+              class="further-tax"
+              min="0"
+              step="0.01"
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>FED Payable</label>
-            <input type="number" name="items[__INDEX__][fedPayable]" class="fed-payable" min="0" step="0.01" value="0">
+
+            <label>
+              FED Payable
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][fedPayable]"
+              class="fed-payable"
+              min="0"
+              step="0.01"
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>Discount</label>
-            <input type="number" name="items[__INDEX__][discount]" class="discount" min="0" step="0.01" value="0">
+
+            <label>
+              Discount
+            </label>
+
+            <input
+              type="number"
+              name="items[__INDEX__][discount]"
+              class="discount"
+              min="0"
+              step="0.01"
+              value="0"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>SRO Schedule</label>
-            <select name="items[__INDEX__][sroScheduleNo]" class="sro-schedule" disabled>
-              <option value="">Select rate first</option>
-            </select>
-            <input type="hidden" class="sro-id">
+
+            <label>
+              SRO Schedule No.
+            </label>
+
+            <input
+              type="text"
+              name="items[__INDEX__][sroScheduleNo]"
+              placeholder="Enter SRO schedule"
+            >
+
           </div>
+
+
           <div class="field">
-            <label>SRO Item Serial No.</label>
-            <select name="items[__INDEX__][sroItemSerialNo]" class="sro-item" disabled>
-              <option value="">Select SRO schedule first</option>
-            </select>
-            <input type="hidden" class="sro-item-id">
+
+            <label>
+              SRO Item Serial No.
+            </label>
+
+            <input
+              type="text"
+              name="items[__INDEX__][sroItemSerialNo]"
+              placeholder="Enter SRO item serial"
+            >
+
           </div>
+
         </div>
+
       </details>
 
-      <div class="item-hint">FBR dependencies: transaction type drives valid rates; HS code + transaction type drives valid UOM; rate and province drive SRO schedules.</div>
+
+      <div class="item-hint">
+        Enter the exact values expected by the FBR Digital Invoicing payload.
+      </div>
+
     </div>
+
   </section>
+
 </template>
 
+
 <script>
-  /*
-   * These are YOUR FastAPI proxy endpoints, not direct browser -> FBR calls.
-   * Rename once to match the routes wrapping your existing reference services.
-   */
-  const REF = {
-    provinces: "/api/fbr/reference/provinces",
-    documentTypes: "/api/fbr/reference/document-types",
-    hsCodes: "/api/fbr/reference/hs-codes",
-    transactionTypes: "/api/fbr/reference/transaction-types",
-    rates: "/api/fbr/reference/rates",
-    hsUom: "/api/fbr/reference/hs-uom",
-    sroSchedules: "/api/fbr/reference/sro-schedules",
-    sroItems: "/api/fbr/reference/sro-items",
-    statl: "/api/fbr/reference/statl"
-  };
 
   let itemIndex = 0;
-  let transactionTypesCache = null;
-  let hsSearchTimer = null;
 
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const $ = (selector, root = document) =>
+    root.querySelector(selector);
 
-  async function getJSON(url, params = {}) {
-    const u = new URL(url, window.location.origin);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") u.searchParams.set(key, value);
-    });
-    const response = await fetch(u, { headers: { "Accept": "application/json" } });
-    if (!response.ok) throw new Error(`Reference API failed (${response.status})`);
-    return response.json();
-  }
+  const $$ = (selector, root = document) =>
+    [...root.querySelectorAll(selector)];
 
-  function setOptions(select, rows, valueKey, labelKey, placeholder = "Select") {
-    select.innerHTML = `<option value="">${placeholder}</option>`;
-    rows.forEach(row => {
-      const option = document.createElement("option");
-      option.value = row[valueKey] ?? "";
-      option.textContent = row[labelKey] ?? row[valueKey] ?? "";
-      Object.entries(row).forEach(([k, v]) => option.dataset[k] = v ?? "");
-      select.appendChild(option);
-    });
-  }
 
-  async function loadStaticReferences() {
-    try {
-      const [provinces, documentTypes, transactionTypes] = await Promise.all([
-        getJSON(REF.provinces),
-        getJSON(REF.documentTypes),
-        getJSON(REF.transactionTypes)
-      ]);
-
-      setOptions($("#buyerProvince"), provinces, "description", "description", "Select province");
-      setOptions($("#invoiceType"), documentTypes, "description", "description", "Select invoice type");
-      transactionTypesCache = transactionTypes;
-
-      // Fallback to DI payload values if your normalized document-type route uses different labels.
-      if (![...$("#invoiceType").options].some(o => o.value === "Sale Invoice")) {
-        $("#invoiceType").insertAdjacentHTML("beforeend", '<option value="Sale Invoice">Sale Invoice</option><option value="Debit Note">Debit Note</option>');
-      }
-
-      $$(".invoice-item").forEach(loadTransactionTypesIntoItem);
-    } catch (error) {
-      console.error(error);
-      // Keep form usable during backend-route wiring.
-      $("#buyerProvince").innerHTML = '<option value="">Unable to load provinces</option>';
-      $("#invoiceType").innerHTML = '<option value="Sale Invoice">Sale Invoice</option><option value="Debit Note">Debit Note</option>';
-    }
-  }
-
-  function loadTransactionTypesIntoItem(item) {
-    if (!transactionTypesCache) return;
-    const select = $(".sale-type", item);
-    setOptions(select, transactionTypesCache, "description", "description", "Select sale type");
-  }
+  // =============================================================
+  // ADD ITEM
+  // =============================================================
 
   function addItem() {
+
     itemIndex += 1;
-    const html = $("#invoice-item-template").innerHTML
+
+    const html = $("#invoice-item-template")
+      .innerHTML
       .replaceAll("__INDEX__", itemIndex)
       .replaceAll("__NUMBER__", itemIndex);
 
+
     const wrapper = document.createElement("div");
+
     wrapper.innerHTML = html.trim();
+
     const item = wrapper.firstElementChild;
+
     $("#items-container").appendChild(item);
+
+
     wireItem(item);
-    loadTransactionTypesIntoItem(item);
+
     updateSummary();
+
   }
+
+
+  // =============================================================
+  // ITEM EVENTS
+  // =============================================================
 
   function wireItem(item) {
-    $(".remove-item", item).addEventListener("click", () => {
-      if ($$(".invoice-item").length === 1) return;
+
+    const removeButton = $(".remove-item", item);
+
+    removeButton.addEventListener("click", () => {
+
+      const items = $$(".invoice-item");
+
+      if (items.length === 1) {
+        return;
+      }
+
       item.remove();
+
       renumberItems();
+
       updateSummary();
+
     });
+
 
     const description = $(".product-description", item);
+
     description.addEventListener("input", () => {
-      $(".item-description-title", item).textContent = description.value || "New invoice item";
+
+      $(".item-description-title", item).textContent =
+        description.value || "New invoice item";
+
     });
 
-    $(".hs-search", item).addEventListener("input", (event) => {
-      clearTimeout(hsSearchTimer);
-      hsSearchTimer = setTimeout(() => searchHsCodes(item, event.target.value.trim()), 250);
+
+    $$("input[type='number']", item).forEach(input => {
+
+      input.addEventListener(
+        "input",
+        updateSummary
+      );
+
     });
 
-    $(".hs-results", item).addEventListener("change", () => chooseHsCode(item));
-    $(".sale-type", item).addEventListener("change", () => onSaleTypeChange(item));
-    $(".rate", item).addEventListener("change", () => onRateChange(item));
-    $(".sro-schedule", item).addEventListener("change", () => onSroChange(item));
-
-    $$("input[type=number]", item).forEach(input => input.addEventListener("input", updateSummary));
   }
 
-  async function searchHsCodes(item, query) {
-    const results = $(".hs-results", item);
-    if (query.length < 2) {
-      results.style.display = "none";
-      return;
-    }
 
-    try {
-      // Recommended backend behavior: call/cache FBR itemdesccode and filter server-side.
-      const rows = await getJSON(REF.hsCodes, { q: query, limit: 20 });
-      results.innerHTML = "";
-      rows.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row.hsCode ?? row.hS_CODE;
-        option.textContent = `${option.value} — ${row.description}`;
-        option.dataset.description = row.description ?? "";
-        results.appendChild(option);
-      });
-      results.style.display = rows.length ? "block" : "none";
-    } catch (error) {
-      console.error(error);
-      results.style.display = "none";
-    }
-  }
-
-  function chooseHsCode(item) {
-    const results = $(".hs-results", item);
-    const selected = results.selectedOptions[0];
-    if (!selected) return;
-
-    $(".hs-search", item).value = selected.value;
-    $(".hs-value", item).value = selected.value;
-    if (!$(".product-description", item).value) {
-      $(".product-description", item).value = selected.dataset.description || "";
-      $(".item-description-title", item).textContent = selected.dataset.description || "New invoice item";
-    }
-    results.style.display = "none";
-    loadUom(item);
-  }
-
-  async function onSaleTypeChange(item) {
-    const saleType = $(".sale-type", item);
-    const selected = saleType.selectedOptions[0];
-    $(".sale-type-id", item).value = selected?.dataset.id ?? selected?.dataset.transactioN_TYPE_ID ?? selected?.dataset.transTypeId ?? "";
-    await Promise.all([loadRates(item), loadUom(item)]);
-  }
-
-  async function loadRates(item) {
-    const transactionTypeId = $(".sale-type-id", item).value;
-    const rate = $(".rate", item);
-    if (!transactionTypeId) {
-      rate.disabled = true;
-      rate.innerHTML = '<option value="">Select sale type first</option>';
-      return;
-    }
-
-    try {
-      rate.disabled = true;
-      rate.innerHTML = '<option value="">Loading FBR rates…</option>';
-      const rows = await getJSON(REF.rates, {
-        date: $("#invoiceDate").value,
-        trans_type_id: transactionTypeId,
-        province_id: $("#sellerProvinceId").value
-      });
-      rate.innerHTML = '<option value="">Select rate</option>';
-      rows.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row.description ?? row.ratE_DESC;
-        option.textContent = row.description ?? row.ratE_DESC;
-        option.dataset.id = row.id ?? row.ratE_ID;
-        option.dataset.value = row.value ?? row.ratE_VALUE;
-        rate.appendChild(option);
-      });
-      rate.disabled = false;
-    } catch (error) {
-      console.error(error);
-      rate.innerHTML = '<option value="">Unable to load rates</option>';
-    }
-  }
-
-  async function loadUom(item) {
-    const hsCode = $(".hs-value", item).value || $(".hs-search", item).value.trim();
-    const transactionTypeId = $(".sale-type-id", item).value;
-    const uom = $(".uom", item);
-    if (!hsCode || !transactionTypeId) {
-      uom.disabled = true;
-      uom.innerHTML = '<option value="">Select HS code + sale type</option>';
-      return;
-    }
-
-    try {
-      uom.disabled = true;
-      uom.innerHTML = '<option value="">Loading valid UOM…</option>';
-      const rows = await getJSON(REF.hsUom, { hs_code: hsCode, annexure_id: transactionTypeId });
-      uom.innerHTML = '<option value="">Select UOM</option>';
-      rows.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row.description;
-        option.textContent = row.description;
-        option.dataset.id = row.id ?? row.uoM_ID;
-        uom.appendChild(option);
-      });
-      uom.disabled = false;
-    } catch (error) {
-      console.error(error);
-      uom.innerHTML = '<option value="">Unable to load UOM</option>';
-    }
-  }
-
-  async function onRateChange(item) {
-    const selected = $(".rate", item).selectedOptions[0];
-    const rateId = selected?.dataset.id ?? "";
-    $(".rate-id", item).value = rateId;
-
-    // Optional UX: calculate sales tax from FBR RATE_VALUE; backend remains authoritative.
-    const percentage = Number(selected?.dataset.value ?? 0);
-    if (Number.isFinite(percentage)) {
-      const exclusive = Number($(".value-excl", item).value || 0);
-      $(".sales-tax", item).value = (exclusive * percentage / 100).toFixed(2);
-    }
-
-    await loadSroSchedules(item);
-    updateSummary();
-  }
-
-  async function loadSroSchedules(item) {
-    const rateId = $(".rate-id", item).value;
-    const select = $(".sro-schedule", item);
-    if (!rateId) {
-      select.disabled = true;
-      select.innerHTML = '<option value="">Select rate first</option>';
-      return;
-    }
-
-    try {
-      select.disabled = true;
-      select.innerHTML = '<option value="">Loading SRO schedules…</option>';
-      const rows = await getJSON(REF.sroSchedules, {
-        rate_id: rateId,
-        date: $("#invoiceDate").value,
-        province_id: $("#sellerProvinceId").value
-      });
-      select.innerHTML = '<option value="">Not applicable</option>';
-      rows.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row.description ?? row.srO_DESC;
-        option.textContent = row.description ?? row.srO_DESC;
-        option.dataset.id = row.id ?? row.srO_ID;
-        select.appendChild(option);
-      });
-      select.disabled = false;
-    } catch (error) {
-      console.error(error);
-      select.innerHTML = '<option value="">Unable to load SRO schedules</option>';
-    }
-  }
-
-  async function onSroChange(item) {
-    const selected = $(".sro-schedule", item).selectedOptions[0];
-    const sroId = selected?.dataset.id ?? "";
-    $(".sro-id", item).value = sroId;
-    const itemSelect = $(".sro-item", item);
-
-    if (!sroId) {
-      itemSelect.disabled = true;
-      itemSelect.innerHTML = '<option value="">Not applicable</option>';
-      return;
-    }
-
-    try {
-      itemSelect.disabled = true;
-      itemSelect.innerHTML = '<option value="">Loading SRO items…</option>';
-      const rows = await getJSON(REF.sroItems, { date: $("#invoiceDate").value, sro_id: sroId });
-      itemSelect.innerHTML = '<option value="">Select SRO item</option>';
-      rows.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row.description ?? row.srO_ITEM_DESC;
-        option.textContent = row.description ?? row.srO_ITEM_DESC;
-        option.dataset.id = row.id ?? row.srO_ITEM_ID;
-        itemSelect.appendChild(option);
-      });
-      itemSelect.disabled = false;
-    } catch (error) {
-      console.error(error);
-      itemSelect.innerHTML = '<option value="">Unable to load SRO items</option>';
-    }
-  }
+  // =============================================================
+  // RENUMBER ITEMS
+  // =============================================================
 
   function renumberItems() {
+
     $$(".invoice-item").forEach((item, index) => {
-      $(".item-number", item).textContent = index + 1;
+
+      $(".item-number", item).textContent =
+        index + 1;
+
     });
+
   }
+
+
+  // =============================================================
+  // SUMMARY
+  // =============================================================
 
   function updateSummary() {
+
     const items = $$(".invoice-item");
-    let exclusive = 0, salesTax = 0, otherTax = 0, discount = 0, total = 0;
+
+
+    let exclusive = 0;
+
+    let salesTax = 0;
+
+    let otherTax = 0;
+
+    let discount = 0;
+
+    let total = 0;
+
 
     items.forEach(item => {
-      const excl = Number($(".value-excl", item)?.value || 0);
-      const st = Number($(".sales-tax", item)?.value || 0);
-      const extra = Number($(".extra-tax", item)?.value || 0);
-      const further = Number($(".further-tax", item)?.value || 0);
-      const fed = Number($(".fed-payable", item)?.value || 0);
-      const disc = Number($(".discount", item)?.value || 0);
+
+
+      const excl =
+        Number(
+          $(".value-excl", item)?.value || 0
+        );
+
+
+      const st =
+        Number(
+          $(".sales-tax", item)?.value || 0
+        );
+
+
+      const extra =
+        Number(
+          $(".extra-tax", item)?.value || 0
+        );
+
+
+      const further =
+        Number(
+          $(".further-tax", item)?.value || 0
+        );
+
+
+      const fed =
+        Number(
+          $(".fed-payable", item)?.value || 0
+        );
+
+
+      const disc =
+        Number(
+          $(".discount", item)?.value || 0
+        );
+
 
       exclusive += excl;
+
       salesTax += st;
-      otherTax += extra + further + fed;
+
+      otherTax +=
+        extra +
+        further +
+        fed;
+
       discount += disc;
 
-      const computedTotal = excl + st + extra + further + fed - disc;
+
+      const computedTotal =
+        excl +
+        st +
+        extra +
+        further +
+        fed -
+        disc;
+
+
       total += computedTotal;
-      const totalInput = $(".total-values", item);
-      if (totalInput) totalInput.value = Math.max(computedTotal, 0).toFixed(2);
+
+
+      const totalInput =
+        $(".total-values", item);
+
+
+      if (totalInput) {
+
+        totalInput.value =
+          Math.max(
+            computedTotal,
+            0
+          ).toFixed(2);
+
+      }
+
     });
 
-    $("#summary-items").textContent = items.length;
-    $("#summary-exclusive").textContent = exclusive.toFixed(2);
-    $("#summary-tax").textContent = salesTax.toFixed(2);
-    $("#summary-other-tax").textContent = otherTax.toFixed(2);
-    $("#summary-discount").textContent = discount.toFixed(2);
-    $("#summary-total").textContent = total.toFixed(2);
+
+    $("#summary-items").textContent =
+      items.length;
+
+
+    $("#summary-exclusive").textContent =
+      exclusive.toFixed(2);
+
+
+    $("#summary-tax").textContent =
+      salesTax.toFixed(2);
+
+
+    $("#summary-other-tax").textContent =
+      otherTax.toFixed(2);
+
+
+    $("#summary-discount").textContent =
+      discount.toFixed(2);
+
+
+    $("#summary-total").textContent =
+      total.toFixed(2);
+
   }
+
+
+  // =============================================================
+  // ENVIRONMENT
+  // =============================================================
 
   function toggleEnvironment() {
-    const sandbox = $("#environment").value === "sandbox";
-    $("#scenario-field").classList.toggle("hidden", !sandbox);
-    $("#scenarioId").required = sandbox;
-    if (!sandbox) $("#scenarioId").value = "";
 
-    const pill = $("#environment-pill");
-    pill.textContent = sandbox ? "Sandbox" : "Production";
-    pill.classList.toggle("production", !sandbox);
+    const isSandbox =
+      $("#environment").value === "sandbox";
+
+
+    $("#scenario-field")
+      .classList
+      .toggle(
+        "hidden",
+        !isSandbox
+      );
+
+
+    $("#scenarioId").required =
+      isSandbox;
+
+
+    if (!isSandbox) {
+
+      $("#scenarioId").value = "";
+
+    }
+
+
+    const pill =
+      $("#environment-pill");
+
+
+    pill.textContent =
+      isSandbox
+        ? "Sandbox"
+        : "Production";
+
+
+    pill.classList.toggle(
+      "production",
+      !isSandbox
+    );
+
   }
+
+
+  // =============================================================
+  // BUYER REGISTRATION
+  // =============================================================
 
   function toggleBuyerRegistration() {
-    const registered = $("#buyerRegistrationType").value === "Registered";
-    $("#buyerNTNCNIC").required = registered;
-    $("#check-buyer-status").disabled = !registered;
-    $("#buyer-status").textContent = registered ? "Required for a registered buyer." : "NTN/CNIC is optional for an unregistered buyer.";
+
+    const registered =
+      $("#buyerRegistrationType").value ===
+      "Registered";
+
+
+    $("#buyerNTNCNIC").required =
+      registered;
+
+
+    $("#buyer-ntn-hint").textContent =
+      registered
+        ? "Required for registered buyer."
+        : "Optional for unregistered buyer.";
+
   }
+
+
+  // =============================================================
+  // DEBIT NOTE
+  // =============================================================
 
   function toggleInvoiceReference() {
-    const debit = $("#invoiceType").value === "Debit Note";
-    $("#invoiceRefNo").required = debit;
-  }
 
-  async function checkBuyerStatus() {
-    const regno = $("#buyerNTNCNIC").value.trim();
-    const status = $("#buyer-status");
-    if (!regno) return;
+    const debit =
+      $("#invoiceType").value ===
+      "Debit Note";
 
-    status.className = "lookup-status";
-    status.textContent = "Checking FBR registration status…";
 
-    try {
-      const result = await getJSON(REF.statl, { regno, date: $("#invoiceDate").value });
-      const text = result.status ?? result.description ?? "Status received";
-      status.textContent = `FBR status: ${text}`;
-      status.className = `lookup-status ${String(text).toLowerCase().includes("active") ? "ok" : "error"}`;
-    } catch (error) {
-      console.error(error);
-      status.textContent = "Unable to check FBR status right now.";
-      status.className = "lookup-status error";
+    $("#invoiceRefNo").required =
+      debit;
+
+
+    if (!debit) {
+
+      $("#invoiceRefNo").value = "";
+
     }
+
   }
 
-  $("#add-item").addEventListener("click", addItem);
-  $("#environment").addEventListener("change", toggleEnvironment);
-  $("#buyerRegistrationType").addEventListener("change", toggleBuyerRegistration);
-  $("#invoiceType").addEventListener("change", toggleInvoiceReference);
-  $("#invoiceDate").addEventListener("change", () => {
-    $$(".invoice-item").forEach(item => {
-      loadRates(item);
-      if ($(".rate-id", item).value) loadSroSchedules(item);
-    });
-  });
-  $("#check-buyer-status").addEventListener("click", checkBuyerStatus);
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    toggleEnvironment();
-    toggleBuyerRegistration();
-    addItem();
-    await loadStaticReferences();
-    toggleInvoiceReference();
-  });
+  // =============================================================
+  // EVENTS
+  // =============================================================
+
+  $("#add-item")
+    .addEventListener(
+      "click",
+      addItem
+    );
+
+
+  $("#environment")
+    .addEventListener(
+      "change",
+      toggleEnvironment
+    );
+
+
+  $("#buyerRegistrationType")
+    .addEventListener(
+      "change",
+      toggleBuyerRegistration
+    );
+
+
+  $("#invoiceType")
+    .addEventListener(
+      "change",
+      toggleInvoiceReference
+    );
+
+
+  // =============================================================
+  // INITIAL LOAD
+  // =============================================================
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+      toggleEnvironment();
+
+      toggleBuyerRegistration();
+
+      toggleInvoiceReference();
+
+      addItem();
+
+    }
+  );
+
 </script>
 
 {% endblock %}
