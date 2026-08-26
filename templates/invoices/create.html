@@ -10,6 +10,11 @@
 
 {% block content %}
 
+<link
+    href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css"
+    rel="stylesheet"
+>
+
 <style>
   .invoice-form-shell {
     display: grid;
@@ -992,13 +997,13 @@
         <span class="req">*</span>
       </label>
 
-      <input
-        type="text"
-        name="items[__INDEX__][hsCode]"
-        class="hs-code"
-        required
-        placeholder="e.g. 6903.1000"
-      >
+      <select
+    class="hs-code"
+    name="items[__INDEX__][hsCode]"
+    placeholder="Search HS code or description..."
+        >
+    <option value=""></option>
+      </select>
     </div>
 
 
@@ -1399,6 +1404,147 @@
   const $$ = (selector, root = document) =>
     [...root.querySelectorAll(selector)];
 
+  
+  function initHsCodeSelect(selectElement) {
+
+  if (!selectElement) {
+    return;
+  }
+
+  // Prevent initializing Tom Select twice
+  if (selectElement.tomselect) {
+    return;
+  }
+
+
+  new TomSelect(selectElement, {
+
+    // Actual value submitted to FBR
+    valueField: "hs_code",
+
+    // Main field used by Tom Select
+    labelField: "hs_code",
+
+    // User can search by BOTH code and FBR description
+    searchField: [
+      "hs_code",
+      "description"
+    ],
+
+    create: false,
+
+    maxOptions: 30,
+
+    loadThrottle: 300,
+
+    placeholder:
+      "Search HS code or description...",
+
+
+    // Don't call backend until at least 2 characters
+    // have been entered
+    shouldLoad: function(query) {
+
+      return query.trim().length >= 2;
+
+    },
+
+
+    // Load HS codes from our FastAPI endpoint
+    load: async function(query, callback) {
+
+      try {
+
+        const response = await fetch(
+          `/api/fbr/reference/hs-codes?q=${encodeURIComponent(query)}`
+        );
+
+
+        if (!response.ok) {
+
+          console.error(
+            "HS code lookup failed:",
+            response.status,
+            await response.text()
+          );
+
+          callback();
+
+          return;
+        }
+
+
+        const data =
+          await response.json();
+
+
+        callback(data);
+
+
+      } catch (error) {
+
+        console.error(
+          "HS code lookup error:",
+          error
+        );
+
+        callback();
+
+      }
+
+    },
+
+
+    render: {
+
+      // Results shown while searching
+      option: function(data, escape) {
+
+        return `
+          <div>
+
+            <strong>
+              ${escape(data.hs_code)}
+            </strong>
+
+            <div style="
+              font-size: 12px;
+              opacity: 0.75;
+              margin-top: 3px;
+              white-space: normal;
+            ">
+              ${escape(data.description)}
+            </div>
+
+          </div>
+        `;
+
+      },
+
+
+      // What remains visible after selection
+      item: function(data, escape) {
+
+        return `
+          <div style="
+            white-space: normal;
+          ">
+            <strong>
+              ${escape(data.hs_code)}
+            </strong>
+            —
+            ${escape(data.description)}
+          </div>
+        `;
+
+      }
+
+    }
+
+  });
+
+}
+
 
   // =============================================================
   // ADD ITEM
@@ -1435,6 +1581,16 @@
   // =============================================================
 
   function wireItem(item) {
+
+  // ============================
+  // HS CODE - TOM SELECT
+  // ============================
+
+  const hsCodeSelect = $(".hs-code", item);
+
+  if (hsCodeSelect) {
+    initHsCodeSelect(hsCodeSelect);
+  }
 
   // ============================
   // REMOVE ITEM
