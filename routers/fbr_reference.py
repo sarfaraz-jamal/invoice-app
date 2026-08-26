@@ -19,7 +19,8 @@ from database.database import get_db
 from models.tenant import Tenant
 
 from services.fbr_reference import get_sale_type_rates
-from services.fbr_credentials import FBRTokenNotConfiguredError
+from services.fbr_credentials import FBRTokenNotConfiguredError, get_fbr_token
+from services.fbr_hs_codes import FBRHSCodeError, search_hs_codes
 
 
 router = APIRouter(
@@ -174,3 +175,60 @@ async def get_rates(
             status_code=502,
             detail="Unable to connect to FBR",
         )
+
+@router.get("/hs-codes")
+async def get_hs_code_search(
+    request: Request,
+    q: str = Query(
+        default="",
+        max_length=100,
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    tenant_id = request.session.get("tenant_id")
+
+    if not tenant_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Tenant session not found.",
+        )
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid tenant ID in session.",
+        ) from exc
+
+    try:
+        token = await get_fbr_token(
+            db=db,
+            tenant_id=tenant_uuid,
+            environment="sandbox",
+        )
+
+    except FBRTokenNotConfiguredError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
+    if not q.strip():
+        return []
+
+    try:
+        results = await search_hs_codes(
+            token=token,
+            query=q,
+            limit=30,
+        )
+
+    except FBRHSCodeError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
+
+    return results

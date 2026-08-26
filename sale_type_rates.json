@@ -1,0 +1,52 @@
+[
+    {
+        "ratE_ID": 280,
+        "ratE_DESC": "0%",
+        "ratE_VALUE": 0
+    },
+    {
+        "ratE_ID": 28,
+        "ratE_DESC": "Exempt",
+        "ratE_VALUE": 0
+    },
+    {
+        "ratE_ID": 422,
+        "ratE_DESC": "5%",
+        "ratE_VALUE": 5
+    },
+    {
+        "ratE_ID": 614,
+        "ratE_DESC": "15%",
+        "ratE_VALUE": 15
+    },
+    {
+        "ratE_ID": 22,
+        "ratE_DESC": "16%",
+        "ratE_VALUE": 16
+    },
+    {
+        "ratE_ID": 92,
+        "ratE_DESC": "17%",
+        "ratE_VALUE": 17
+    },
+    {
+        "ratE_ID": 430,
+        "ratE_DESC": "18.5%",
+        "ratE_VALUE": 18.5
+    },
+    {
+        "ratE_ID": 281,
+        "ratE_DESC": "50/SqY",
+        "ratE_VALUE": 50
+    },
+    {
+        "ratE_ID": 282,
+        "ratE_DESC": "100/SqY",
+        "ratE_VALUE": 100
+    },
+    {
+        "ratE_ID": 717,
+        "ratE_DESC": "Rs.1000",
+        "ratE_VALUE": 1000
+    }
+]

@@ -2,8 +2,8 @@ import requests
 
 TOKEN = "c79f257e-a1d8-3c52-bc8b-61f3f826770a"
 
-hs_code = "7318.9000"
-sale_type_id = 75  # example: Goods at standard rate (default)
+hs_code = "7318.2290"
+sale_type_id = 3  # example: Goods at standard rate (default)
 
 url = "https://gw.fbr.gov.pk/pdi/v2/HS_UOM"
 

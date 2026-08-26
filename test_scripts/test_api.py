@@ -12,40 +12,84 @@ headers = {
 
 invoice = {
     "invoiceType": "Sale Invoice",
-    "invoiceDate": "2026-08-18",
+    "invoiceDate": "2026-08-24",
+
     "sellerNTNCNIC": "9568725",
     "sellerBusinessName": "A2TECH (PRIVATE) LIMITED",
     "sellerProvince": "Sindh",
     "sellerAddress": "House # 3/44, Big Plot, Shah Faisal Colony # 3, Pakistan",
-    "buyerNTNCNIC": "4220155256289",
-    "buyerBusinessName": "Sarfaraz Jamal",
+
+    "buyerNTNCNIC": "1435809",
+    "buyerBusinessName": "Fauji Fertlizer Company Ltd",
     "buyerProvince": "Sindh",
-    "buyerAddress": "3D 24/9 nazimabad",
-    "buyerRegistrationType": "Unregistered",
-    "invoiceRefNo": "a2tech_test_inv_002",
-    "scenarioId": "SN002",
+    "buyerAddress": "EZ/I/P-1 Eastern Zone, Bin Qasim, Karachi-75020, Pakistan",
+    "buyerRegistrationType": "Registered",
+
+    "invoiceRefNo": "",
+    "scenarioId": "SN005",
+
     "items": [
         {
-            "hsCode": "6903.1000",
-            "productDescription": "Inner Graphite Crucible Make: Alpha,USA",
-            "rate": "18%",
+            "hsCode": "0102.2930",
+            "productDescription": "Inner Graphite Crucible",
+            "rate": "10%",
             "uoM": "KG",
-            "quantity": 5,
-            "totalValues": 176256.60,
-            "valueSalesExcludingST": 149370.00,
-            "fixedNotifiedValueOrRetailPrice": 29874.00,
-            "salesTaxApplicable": 26886.60,
-            "salesTaxWithheldAtSource": 0.00,
-            "extraTax": "",
+            "quantity": 1,
+
+            "totalValues": 572241.98,
+            "valueSalesExcludingST": 544992.86,
+            "fixedNotifiedValueOrRetailPrice": 0,
+            "salesTaxApplicable": 27249.62,
+            "salesTaxWithheldAtSource": 0,
+
+            "extraTax": 0,
             "furtherTax": 0,
-            "sroScheduleNo": "",
+            "sroScheduleNo": "SRO364",
             "fedPayable": 0,
             "discount": 0,
-            "saleType": "Goods at standard rate (default)",
-            "sroItemSerialNo": ""
+
+            "saleType": "Goods at Reduced Rate",
+            "sroItemSerialNo": "84(i)",
         }
-    ]
+    ],
 }
+
+# invoice2 = {
+#     "invoiceType": "Sale Invoice",
+#     "invoiceDate": "2026-08-24",
+#     "sellerNTNCNIC": "9568725",
+#     "sellerBusinessName": "A2TECH (PRIVATE) LIMITED",
+#     "sellerProvince": "Sindh",
+#     "sellerAddress": "House # 3/44, Big Plot, Shah Faisal Colony # 3, Pakistan",
+#     "buyerNTNCNIC": "4220155256289",
+#     "buyerBusinessName": "FFC",
+#     "buyerProvince": "Sindh",
+#     "buyerAddress": "EZ/I/P-1 Eastern Zone, Bin Qasim, Karachi-75020, Pakistan	",
+#     "buyerRegistrationType": "Unregistered",
+#     "invoiceRefNo": "a2tech_test_inv_001",
+#     "scenarioId": "SN002",
+#     "items": [
+#         {
+#             "hsCode": "6903.1000",
+#             "productDescription": "Inner Graphite Crucible (Dimensions: H=0.623"""" x OD=0.50"""") (100 / Pack) Make: Alpha, USA",
+#             "rate": "18%",
+#             "uoM": "KG",
+#             "quantity": 1,
+#             "totalValues":   573675.88 ,
+#             "valueSalesExcludingST":   486166.00 ,
+#             "fixedNotifiedValueOrRetailPrice":   486166.00 ,
+#             "salesTaxApplicable":   87509.88 ,
+#             "salesTaxWithheldAtSource": 0.00,
+#             "extraTax": "",
+#             "furtherTax": 0,
+#             "sroScheduleNo": "",
+#             "fedPayable": 0,
+#             "discount": 0,
+#             "saleType": "Goods at standard rate (default)",
+#             "sroItemSerialNo": ""
+#         }
+#     ]
+# }
 
 response = requests.post(
     url,
@@ -60,5 +104,5 @@ print("-------------------------------")
 
 try:
     print(response.json())
-except ValueError:
+except Exception:
     print(response.text)
