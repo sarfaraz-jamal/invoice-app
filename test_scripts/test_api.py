@@ -54,7 +54,44 @@ invoice = {
     ],
 }
 
-# invoice2 = {
+invoice2 = {
+ 
+  "invoiceType": "Sale Invoice",
+  "invoiceDate": "2026-08-26",
+  "sellerNTNCNIC": "9568725",
+  "sellerBusinessName": "A2 TECH (PRIVATE) LIMITED",
+  "sellerProvince": "SINDH",
+  "sellerAddress": "House # 3/44, Big Plot, Shah Faisal Colony # 3, Pakistan",
+  "buyerNTNCNIC": "1435809",
+  "buyerBusinessName": "sss enterprises",
+  "buyerProvince": "SINDH",
+  "buyerAddress": "8B, 8th floor, Mughlia Arcade, 1/19, 3A, Nazimabad no. 3",
+  "buyerRegistrationType": "Registered",
+  "items": [
+    {
+    "hsCode": "8472.3000",
+    "productDescription": "PENCIL SHARPENER",
+    "rate": "10%",
+    "uoM": "Numbers, pieces, units",
+    "quantity": 1.0,
+    "totalValues": 1320.0,
+    "valueSalesExcludingST": 1200.0,
+    "fixedNotifiedValueOrRetailPrice": 1200.0,
+    "salesTaxApplicable": 120.0,
+    "salesTaxWithheldAtSource": 0.0,
+    "extraTax": "",
+    "furtherTax": 0.0,
+    "fedPayable": 0.0,
+    "discount": 0.0,
+    "sroScheduleNo": "EIGHTH SCHEDULE Table 1",
+    "saleType": "Goods at Reduced Rate",
+    "sroItemSerialNo": "84(i)"
+}
+  ],
+  "scenarioId": "SN005"
+}
+
+# invoice3 = {
 #     "invoiceType": "Sale Invoice",
 #     "invoiceDate": "2026-08-24",
 #     "sellerNTNCNIC": "9568725",
@@ -94,7 +131,7 @@ invoice = {
 response = requests.post(
     url,
     headers=headers,
-    json=invoice,
+    json=invoice2,
     timeout=30
 )
 

@@ -20,7 +20,10 @@ from models.tenant import Tenant
 
 from services.fbr_reference import get_sale_type_rates
 from services.fbr_credentials import FBRTokenNotConfiguredError, get_fbr_token
-from services.fbr_hs_codes import FBRHSCodeError, search_hs_codes
+from services.fbr_hs_codes import FBRHSCodeError, get_hs_codes
+from services.fbr_sro_schedule import FBRSROScheduleError, get_sro_schedules
+from services.fbr_sro_item import FBRSROItemError, get_sro_items
+from services.fbr_uom import FBRUOMError, get_valid_uoms
 
 
 router = APIRouter(
@@ -177,12 +180,8 @@ async def get_rates(
         )
 
 @router.get("/hs-codes")
-async def get_hs_code_search(
+async def get_hs_codes_reference(
     request: Request,
-    q: str = Query(
-        default="",
-        max_length=100,
-    ),
     db: AsyncSession = Depends(get_db),
 ):
     tenant_id = request.session.get("tenant_id")
@@ -209,21 +208,17 @@ async def get_hs_code_search(
             environment="sandbox",
         )
 
+        hs_codes = await get_hs_codes(
+            token=token,
+        )
+
+        return hs_codes
+
     except FBRTokenNotConfiguredError as exc:
         raise HTTPException(
             status_code=400,
             detail=str(exc),
         ) from exc
-
-    if not q.strip():
-        return []
-
-    try:
-        results = await search_hs_codes(
-            token=token,
-            query=q,
-            limit=30,
-        )
 
     except FBRHSCodeError as exc:
         raise HTTPException(
@@ -231,4 +226,204 @@ async def get_hs_code_search(
             detail=str(exc),
         ) from exc
 
-    return results
+    
+@router.get("/sro-schedules")
+async def get_sro_schedule_reference(
+    request: Request,
+    rate_id: int,
+    date: str,
+    environment: str = "sandbox",
+    db: AsyncSession = Depends(get_db),
+):
+    tenant_id = request.session.get("tenant_id")
+
+    if not tenant_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Tenant session not found.",
+        )
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid tenant ID in session.",
+        ) from exc
+
+
+    if environment not in {
+        "sandbox",
+        "production",
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid FBR environment.",
+        )
+
+
+    try:
+        token = await get_fbr_token(
+            db=db,
+            tenant_id=tenant_uuid,
+            environment=environment,
+        )
+
+        schedules = await get_sro_schedules(
+            token=token,
+            rate_id=rate_id,
+            date=date,
+        )
+
+        return schedules
+
+
+    except FBRTokenNotConfiguredError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
+
+    except FBRSROScheduleError as exc:
+
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
+
+@router.get("/sro-items")
+async def get_sro_items_reference(
+    request: Request,
+    sro_id: int,
+    date: str,
+    environment: str = "sandbox",
+    db: AsyncSession = Depends(get_db),
+):
+    tenant_id = request.session.get("tenant_id")
+
+    if not tenant_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Tenant session not found.",
+        )
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid tenant ID in session.",
+        ) from exc
+
+
+    if environment not in {
+        "sandbox",
+        "production",
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid FBR environment.",
+        )
+
+
+    try:
+        token = await get_fbr_token(
+            db=db,
+            tenant_id=tenant_uuid,
+            environment=environment,
+        )
+
+        items = await get_sro_items(
+            token=token,
+            sro_id=sro_id,
+            date=date,
+        )
+
+        return items
+
+
+    except FBRTokenNotConfiguredError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
+
+    except FBRSROItemError as exc:
+
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
+
+@router.get("/uoms")
+async def get_uoms_reference(
+    request: Request,
+    hs_code: str,
+    annexure_id: int,
+    environment: str = "sandbox",
+    db: AsyncSession = Depends(get_db),
+):
+    tenant_id = request.session.get("tenant_id")
+
+    if not tenant_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Tenant session not found.",
+        )
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid tenant ID in session.",
+        ) from exc
+
+
+    if environment not in {
+        "sandbox",
+        "production",
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid FBR environment.",
+        )
+
+
+    try:
+        token = await get_fbr_token(
+            db=db,
+            tenant_id=tenant_uuid,
+            environment=environment,
+        )
+
+        uoms = await get_valid_uoms(
+            token=token,
+            hs_code=hs_code,
+            annexure_id=annexure_id,
+        )
+
+        return uoms
+
+
+    except FBRTokenNotConfiguredError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
+
+    except FBRUOMError as exc:
+
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc

@@ -1,6 +1,6 @@
 import requests
 
-url = "https://gw.fbr.gov.pk/pdi/v1/transtypecode"
+url = "https://gw.fbr.gov.pk/pdi/v1/doctypecode"
 
 token = "c79f257e-a1d8-3c52-bc8b-61f3f826770a"
 

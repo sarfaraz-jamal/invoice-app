@@ -380,6 +380,105 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* =========================================================
+   HS CODE SEARCHABLE DROPDOWN
+   ========================================================= */
+
+.hs-code-select {
+  position: relative;
+  width: 100%;
+}
+
+
+.hs-code-search {
+  width: 100%;
+}
+
+
+.hs-code-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+
+  width: 520px;
+  max-width: min(520px, 80vw);
+
+  max-height: 320px;
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #d7d3ca;
+  border-radius: 8px;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12);
+
+  z-index: 1000;
+
+  padding: 4px;
+}
+
+
+.hs-code-options.hidden {
+  display: none;
+}
+
+
+.hs-code-option {
+  display: block;
+
+  width: 100%;
+
+  padding: 9px 10px;
+
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+
+  text-align: left;
+  cursor: pointer;
+
+  color: #222;
+}
+
+
+.hs-code-option:hover {
+  background: #f3f4f2;
+}
+
+
+.hs-code-option strong {
+  display: block;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  color: #176b47;
+
+  margin-bottom: 3px;
+}
+
+
+.hs-code-option-description {
+  font-size: 12px;
+  line-height: 1.35;
+
+  color: #666;
+
+  white-space: normal;
+}
+
+
+.hs-code-empty {
+  padding: 12px;
+
+  font-size: 12px;
+  color: #777;
+
+  text-align: center;
+}
 </style>
 
 
@@ -992,18 +1091,31 @@
   <div class="item-grid-primary">
 
     <div class="field">
-      <label>
-        HS Code
-        <span class="req">*</span>
-      </label>
+      <div class="field">
+  <label>
+    HS Code
+    <span class="req">*</span>
+  </label>
 
-      <select
-    class="hs-code"
-    name="items[__INDEX__][hsCode]"
-    placeholder="Search HS code or description..."
-        >
-    <option value=""></option>
-      </select>
+  <div class="searchable-select hs-code-select">
+
+    <input
+      type="text"
+      class="hs-code-search"
+      placeholder="Search HS code or description..."
+      autocomplete="off"
+    >
+
+    <input
+      type="hidden"
+      class="hs-code-value"
+      name="items[__INDEX__][hsCode]"
+    >
+
+    <div class="hs-code-options hidden"></div>
+
+  </div>
+</div>
     </div>
 
 
@@ -1219,6 +1331,11 @@
           Select Sale Type first
         </option>
       </select>
+
+        <input
+    type="hidden"
+    class="rate-id"
+        >
     </div>
 
   </div>
@@ -1398,152 +1515,146 @@
 
   let itemIndex = 0;
 
+  // Browser-side HS code cache.
+  // The backend itself is also caching the FBR response.
+  let hsCodeList = null;
+  let hsCodeListPromise = null;
+
+
+  // =============================================================
+  // DOM HELPERS
+  // =============================================================
+
   const $ = (selector, root = document) =>
     root.querySelector(selector);
 
   const $$ = (selector, root = document) =>
     [...root.querySelectorAll(selector)];
 
-  
-  function initHsCodeSelect(selectElement) {
 
-  if (!selectElement) {
-    return;
-  }
+  // =============================================================
+  // HS CODE DATA
+  // =============================================================
 
-  // Prevent initializing Tom Select twice
-  if (selectElement.tomselect) {
-    return;
-  }
+  async function getHsCodeList() {
 
+    if (hsCodeList) {
+      return hsCodeList;
+    }
 
-  new TomSelect(selectElement, {
-
-    // Actual value submitted to FBR
-    valueField: "hs_code",
-
-    // Main field used by Tom Select
-    labelField: "hs_code",
-
-    // User can search by BOTH code and FBR description
-    searchField: [
-      "hs_code",
-      "description"
-    ],
-
-    create: false,
-
-    maxOptions: 30,
-
-    loadThrottle: 300,
-
-    placeholder:
-      "Search HS code or description...",
+    if (hsCodeListPromise) {
+      return hsCodeListPromise;
+    }
 
 
-    // Don't call backend until at least 2 characters
-    // have been entered
-    shouldLoad: function(query) {
-
-      return query.trim().length >= 2;
-
-    },
-
-
-    // Load HS codes from our FastAPI endpoint
-    load: async function(query, callback) {
-
-      try {
-
-        const response = await fetch(
-          `/api/fbr/reference/hs-codes?q=${encodeURIComponent(query)}`
-        );
-
+    hsCodeListPromise = fetch(
+      "/api/fbr/reference/hs-codes",
+      {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        }
+      }
+    )
+      .then(async response => {
 
         if (!response.ok) {
 
-          console.error(
-            "HS code lookup failed:",
-            response.status,
-            await response.text()
+          const errorText =
+            await response.text();
+
+          throw new Error(
+            `HS Code API failed: ${response.status} - ${errorText}`
           );
 
-          callback();
-
-          return;
         }
 
+        return response.json();
 
-        const data =
-          await response.json();
+      })
+      .then(data => {
 
+        hsCodeList = data;
 
-        callback(data);
+        return hsCodeList;
 
+      })
+      .catch(error => {
 
-      } catch (error) {
+        hsCodeListPromise = null;
 
-        console.error(
-          "HS code lookup error:",
-          error
-        );
+        throw error;
 
-        callback();
-
-      }
-
-    },
+      });
 
 
-    render: {
-
-      // Results shown while searching
-      option: function(data, escape) {
-
-        return `
-          <div>
-
-            <strong>
-              ${escape(data.hs_code)}
-            </strong>
-
-            <div style="
-              font-size: 12px;
-              opacity: 0.75;
-              margin-top: 3px;
-              white-space: normal;
-            ">
-              ${escape(data.description)}
-            </div>
-
-          </div>
-        `;
-
-      },
+    return hsCodeListPromise;
+  }
 
 
-      // What remains visible after selection
-      item: function(data, escape) {
+  function renderHsCodeOptions(
+    container,
+    items
+  ) {
 
-        return `
-          <div style="
-            white-space: normal;
-          ">
-            <strong>
-              ${escape(data.hs_code)}
-            </strong>
-            —
-            ${escape(data.description)}
-          </div>
-        `;
+    container.innerHTML = "";
 
-      }
 
+    if (!items.length) {
+
+      container.innerHTML = `
+        <div class="hs-code-empty">
+          No HS codes found
+        </div>
+      `;
+
+      return;
     }
 
-  });
 
-}
+    items.forEach(hs => {
+
+      const button =
+        document.createElement("button");
+
+      button.type = "button";
+
+      button.className =
+        "hs-code-option";
+
+      button.dataset.code =
+        hs.hs_code || "";
+
+      button.dataset.description =
+        hs.description || "";
+
+
+      const code =
+        document.createElement("strong");
+
+      code.textContent =
+        hs.hs_code || "";
+
+
+      const description =
+        document.createElement("div");
+
+      description.className =
+        "hs-code-option-description";
+
+      description.textContent =
+        hs.description || "";
+
+
+      button.appendChild(code);
+
+      button.appendChild(description);
+
+      container.appendChild(button);
+
+    });
+
+  }
 
 
   // =============================================================
@@ -1554,19 +1665,34 @@
 
     itemIndex += 1;
 
-    const html = $("#invoice-item-template")
-      .innerHTML
-      .replaceAll("__INDEX__", itemIndex)
-      .replaceAll("__NUMBER__", itemIndex);
+
+    const html =
+      $("#invoice-item-template")
+        .innerHTML
+        .replaceAll(
+          "__INDEX__",
+          itemIndex
+        )
+        .replaceAll(
+          "__NUMBER__",
+          itemIndex
+        );
 
 
-    const wrapper = document.createElement("div");
+    const wrapper =
+      document.createElement("div");
 
-    wrapper.innerHTML = html.trim();
 
-    const item = wrapper.firstElementChild;
+    wrapper.innerHTML =
+      html.trim();
 
-    $("#items-container").appendChild(item);
+
+    const item =
+      wrapper.firstElementChild;
+
+
+    $("#items-container")
+      .appendChild(item);
 
 
     wireItem(item);
@@ -1582,266 +1708,930 @@
 
   function wireItem(item) {
 
-  // ============================
-  // HS CODE - TOM SELECT
-  // ============================
 
-  const hsCodeSelect = $(".hs-code", item);
+    // ===========================================================
+    // SEARCHABLE HS CODE
+    // ===========================================================
 
-  if (hsCodeSelect) {
-    initHsCodeSelect(hsCodeSelect);
-  }
+    const hsCodeSearch =
+      $(".hs-code-search", item);
 
-  // ============================
-  // REMOVE ITEM
-  // ============================
+    const hsCodeValue =
+      $(".hs-code-value", item);
 
-  const removeButton = $(".remove-item", item);
-
-  if (removeButton) {
-    removeButton.addEventListener("click", () => {
-
-      const items = $$(".invoice-item");
-
-      if (items.length === 1) {
-        return;
-      }
-
-      item.remove();
-
-      renumberItems();
-      updateSummary();
-    });
-  }
+    const hsCodeOptions =
+      $(".hs-code-options", item);
 
 
-  // ============================
-  // DESCRIPTION
-  // ============================
+    if (
+      hsCodeSearch &&
+      hsCodeValue &&
+      hsCodeOptions
+    ) {
 
-  const description = $(".product-description", item);
-
-  if (description) {
-    description.addEventListener("input", () => {
-
-      const title = $(".item-description-title", item);
-
-      if (title) {
-        title.textContent =
-          description.value || "New invoice item";
-      }
-
-    });
-  }
+      let localHsCodes = [];
 
 
-  // ============================
-  // SEARCHABLE UOM
-  // ============================
+      // ---------------------------------------------------------
+      // OPEN FULL HS CODE LIST
+      // ---------------------------------------------------------
 
-  const uomSearch = $(".uom-search", item);
-  const uomValue = $(".uom-value", item);
-  const uomOptions = $(".uom-options", item);
+      hsCodeSearch.addEventListener(
+        "focus",
+        async () => {
 
-  if (uomSearch && uomValue && uomOptions) {
+          try {
 
-    const uomButtons =
-      $$(".uom-options button", item);
-
-
-    // Open dropdown
-    uomSearch.addEventListener("focus", () => {
-      uomOptions.classList.remove("hidden");
-    });
+            hsCodeOptions
+              .classList
+              .remove("hidden");
 
 
-    // Search / filter
-    uomSearch.addEventListener("input", () => {
+            if (!localHsCodes.length) {
 
-      const search =
-        uomSearch.value
-          .trim()
-          .toLowerCase();
-
-      // typing means previous selected value
-      // is no longer trusted
-      uomValue.value = "";
-
-      uomSearch.setCustomValidity("");
-
-      uomOptions.classList.remove("hidden");
+              hsCodeOptions.innerHTML = `
+                <div class="hs-code-empty">
+                  Loading HS codes...
+                </div>
+              `;
 
 
-      uomButtons.forEach(button => {
+              localHsCodes =
+                await getHsCodeList();
 
-        const value =
-          (button.dataset.value || "")
-            .toLowerCase();
+            }
 
-        button.classList.toggle(
-          "hidden",
-          !value.includes(search)
+
+            renderHsCodeOptions(
+              hsCodeOptions,
+              localHsCodes
+            );
+
+
+          } catch (error) {
+
+            console.error(
+              "Unable to load HS codes:",
+              error
+            );
+
+
+            hsCodeOptions.innerHTML = `
+              <div class="hs-code-empty">
+                Unable to load HS codes
+              </div>
+            `;
+
+          }
+
+        }
+      );
+
+
+      // ---------------------------------------------------------
+      // SEARCH HS CODE / DESCRIPTION
+      // ---------------------------------------------------------
+
+      hsCodeSearch.addEventListener(
+        "input",
+        async () => {
+
+          // User has edited the visible text.
+          // Previous selection is therefore invalid.
+          hsCodeValue.value = "";
+
+          hsCodeSearch
+            .setCustomValidity("");
+
+
+          try {
+
+            if (!localHsCodes.length) {
+
+              localHsCodes =
+                await getHsCodeList();
+
+            }
+
+
+            const search =
+              hsCodeSearch
+                .value
+                .trim()
+                .toLowerCase();
+
+
+            const filtered =
+              !search
+                ? localHsCodes
+                : localHsCodes.filter(
+                    hs => {
+
+                      const code =
+                        (
+                          hs.hs_code || ""
+                        ).toLowerCase();
+
+
+                      const description =
+                        (
+                          hs.description || ""
+                        ).toLowerCase();
+
+
+                      return (
+                        code.includes(search) ||
+                        description.includes(search)
+                      );
+
+                    }
+                  );
+
+
+            renderHsCodeOptions(
+              hsCodeOptions,
+              filtered
+            );
+
+
+            hsCodeOptions
+              .classList
+              .remove("hidden");
+            
+            await loadUoms(item);
+
+
+          } catch (error) {
+
+            console.error(
+              "Unable to filter HS codes:",
+              error
+            );
+
+          }
+
+        }
+      );
+
+
+      // ---------------------------------------------------------
+      // SELECT HS CODE
+      // ---------------------------------------------------------
+
+      hsCodeOptions.addEventListener(
+        "click",
+        async event => {
+
+          const button =
+            event.target.closest(
+              ".hs-code-option"
+            );
+
+
+          if (!button) {
+            return;
+          }
+
+
+          const code =
+            button.dataset.code || "";
+
+          const description =
+            button.dataset.description || "";
+
+
+          // Actual value submitted to FBR
+          hsCodeValue.value =
+            code;
+
+
+          // User sees code + official FBR description
+          hsCodeSearch.value =
+            `${code} — ${description}`;
+
+
+          hsCodeSearch
+            .setCustomValidity("");
+
+
+          hsCodeOptions
+            .classList
+            .add("hidden");
+
+        }
+      );
+
+    }
+
+
+    // ===========================================================
+    // REMOVE ITEM
+    // ===========================================================
+
+    const removeButton =
+      $(".remove-item", item);
+
+
+    if (removeButton) {
+
+      removeButton.addEventListener(
+        "click",
+        () => {
+
+          const items =
+            $$(".invoice-item");
+
+
+          if (items.length === 1) {
+            return;
+          }
+
+
+          item.remove();
+
+          renumberItems();
+
+          updateSummary();
+
+        }
+      );
+
+    }
+
+
+    // ===========================================================
+    // DESCRIPTION
+    // ===========================================================
+
+    const description =
+      $(".product-description", item);
+
+
+    if (description) {
+
+      description.addEventListener(
+        "input",
+        () => {
+
+          const title =
+            $(".item-description-title", item);
+
+
+          if (title) {
+
+            title.textContent =
+              description.value ||
+              "New invoice item";
+
+          }
+
+        }
+      );
+
+    }
+
+
+    // ===========================================================
+    // SEARCHABLE UOM
+    // ===========================================================
+
+    const uomSearch =
+      $(".uom-search", item);
+
+    const uomValue =
+      $(".uom-value", item);
+
+    const uomOptions =
+      $(".uom-options", item);
+
+
+    if (
+      uomSearch &&
+      uomValue &&
+      uomOptions
+    ) {
+
+      const uomButtons =
+        $$(
+          ".uom-options button",
+          item
         );
 
-      });
 
-    });
+      // Open
+      uomSearch.addEventListener(
+        "focus",
+        () => {
+
+          uomOptions
+            .classList
+            .remove("hidden");
+
+        }
+      );
 
 
-    // Select UOM
-    uomButtons.forEach(button => {
+      // Search
+      uomSearch.addEventListener(
+        "input",
+        () => {
 
-      button.addEventListener("click", () => {
+          const search =
+            uomSearch
+              .value
+              .trim()
+              .toLowerCase();
 
-        const value =
-          button.dataset.value || "";
 
-        uomSearch.value = value;
+          uomValue.value = "";
 
-        uomValue.value = value;
+          uomSearch
+            .setCustomValidity("");
 
-        uomSearch.setCustomValidity("");
 
-        uomOptions.classList.add("hidden");
+          uomOptions
+            .classList
+            .remove("hidden");
 
-      });
 
-    });
+          uomButtons.forEach(
+            button => {
+
+              const value =
+                (
+                  button.dataset.value || ""
+                ).toLowerCase();
+
+
+              button.classList.toggle(
+                "hidden",
+                !value.includes(search)
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+      // Select
+      uomButtons.forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              const value =
+                button.dataset.value || "";
+
+
+              uomSearch.value =
+                value;
+
+              uomValue.value =
+                value;
+
+
+              uomSearch
+                .setCustomValidity("");
+
+
+              uomOptions
+                .classList
+                .add("hidden");
+
+            }
+          );
+
+        }
+      );
+
+    }
+
+
+    // ===========================================================
+    // SEARCHABLE SALE TYPE
+    // ===========================================================
+
+    const saleTypeSearch =
+      $(".sale-type-search", item);
+
+    const saleTypeValue =
+      $(".sale-type-value", item);
+
+    const saleTypeOptions =
+      $(".sale-type-options", item);
+
+    const saleTypeId =
+      $(".sale-type-id", item);
+
+
+    if (
+      saleTypeSearch &&
+      saleTypeValue &&
+      saleTypeOptions
+    ) {
+
+      const saleTypeButtons =
+        $$(
+          ".sale-type-options button",
+          item
+        );
+
+
+      // Open
+      saleTypeSearch.addEventListener(
+        "focus",
+        () => {
+
+          saleTypeOptions
+            .classList
+            .remove("hidden");
+
+        }
+      );
+
+
+      // Search
+      saleTypeSearch.addEventListener(
+        "input",
+        () => {
+
+          const search =
+            saleTypeSearch
+              .value
+              .trim()
+              .toLowerCase();
+
+
+          // Existing selection becomes invalid
+          saleTypeValue.value = "";
+
+          if (saleTypeId) {
+            saleTypeId.value = "";
+          }
+
+
+          saleTypeSearch
+            .setCustomValidity("");
+
+
+          saleTypeOptions
+            .classList
+            .remove("hidden");
+
+
+          saleTypeButtons.forEach(
+            button => {
+
+              const value =
+                (
+                  button.dataset.value || ""
+                ).toLowerCase();
+
+
+              button.classList.toggle(
+                "hidden",
+                !value.includes(search)
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+      // Select Sale Type
+      saleTypeButtons.forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const value =
+                button.dataset.value || "";
+
+              const id =
+                button.dataset.id || "";
+
+
+              saleTypeSearch.value =
+                value;
+
+              saleTypeValue.value =
+                value;
+
+
+              if (saleTypeId) {
+                saleTypeId.value = id;
+              }
+
+
+              saleTypeSearch
+                .setCustomValidity("");
+
+
+              saleTypeOptions
+                .classList
+                .add("hidden");
+
+
+              // Sale Type determines valid rates
+              await loadRates(item);
+
+              await loadUoms(item);
+
+            }
+          );
+
+        }
+      );
+
+    }
+
+
+    // ===========================================================
+    // RATE SELECTION
+    // ===========================================================
+
+    const rateSelect =
+      $(".rate", item);
+
+    const rateIdInput =
+      $(".rate-id", item);
+
+
+    if (
+      rateSelect &&
+      rateIdInput
+    ) {
+
+      rateSelect.addEventListener(
+      "change",
+      async () => {
+
+    const selectedOption =
+      rateSelect.selectedOptions[0];
+
+    rateIdInput.value =
+      selectedOption?.dataset.id || "";
+
+    console.log(
+      "Selected FBR Rate ID:",
+      rateIdInput.value
+    );
+
+    await loadSroSchedules(item);
+
+  }
+);
+
+    }
+
+    // ============================
+// SRO SCHEDULE SELECTION
+// ============================
+
+const sroScheduleSelect =
+  $(".sro-schedule", item);
+
+const sroIdInput =
+  $(".sro-id", item);
+
+
+if (
+  sroScheduleSelect &&
+  sroIdInput
+) {
+
+  sroScheduleSelect.addEventListener(
+    "change",
+    async () => {
+
+      const selectedOption =
+        sroScheduleSelect.selectedOptions[0];
+
+
+      sroIdInput.value =
+        selectedOption?.dataset.id || "";
+
+
+      console.log(
+        "Selected FBR SRO ID:",
+        sroIdInput.value
+      );
+
+      await loadSroItems(item);
+
+    }
+  );
+
+}
+
+    // ===========================================================
+    // SUMMARY EVENTS
+    // ===========================================================
+
+    $$(
+      "input[type='number']",
+      item
+    ).forEach(
+      input => {
+
+        input.addEventListener(
+          "input",
+          updateSummary
+        );
+
+      }
+    );
 
   }
 
-  // =========================================================
-// SEARCHABLE SALE TYPE
-// =========================================================
 
-const saleTypeSearch = $(".sale-type-search", item);
-const saleTypeValue = $(".sale-type-value", item);
-const saleTypeOptions = $(".sale-type-options", item);
+  // =============================================================
+  // LOAD FBR RATES
+  // =============================================================
 
-if (saleTypeSearch && saleTypeValue && saleTypeOptions) {
+  async function loadRates(item) {
 
-  const saleTypeButtons =
-    $$(".sale-type-options button", item);
+    const transactionTypeId =
+      $(".sale-type-id", item)
+        ?.value;
 
 
-  // Open dropdown
-  saleTypeSearch.addEventListener("focus", () => {
-
-    saleTypeOptions.classList.remove("hidden");
-
-  });
+    const sellerProvinceCode =
+      $("#sellerProvinceCode")
+        ?.value;
 
 
-  // Filter while typing
-  saleTypeSearch.addEventListener("input", () => {
-
-    const search =
-      saleTypeSearch.value
-        .trim()
-        .toLowerCase();
-
-    // Clear previous valid selection
-    saleTypeValue.value = "";
-
-    saleTypeSearch.setCustomValidity("");
-
-    saleTypeOptions.classList.remove("hidden");
+    const invoiceDate =
+      $("#invoiceDate")
+        ?.value;
 
 
-    saleTypeButtons.forEach(button => {
+    const rateSelect =
+      $(".rate", item);
 
-      const value =
-        (button.dataset.value || "")
-          .toLowerCase();
 
-      button.classList.toggle(
-        "hidden",
-        !value.includes(search)
+    const rateIdInput =
+      $(".rate-id", item);
+
+
+    if (!rateSelect) {
+      return;
+    }
+
+
+    // Any reload invalidates the previous rate ID.
+    if (rateIdInput) {
+      rateIdInput.value = "";
+    }
+
+
+    if (!transactionTypeId) {
+
+      rateSelect.disabled = true;
+
+      rateSelect.innerHTML = `
+        <option value="">
+          Select Sale Type first
+        </option>
+      `;
+
+      return;
+    }
+
+
+    if (!sellerProvinceCode) {
+
+      rateSelect.disabled = true;
+
+      rateSelect.innerHTML = `
+        <option value="">
+          Seller province code missing
+        </option>
+      `;
+
+
+      console.error(
+        "tenant_province_code is missing from session"
       );
 
-    });
+      return;
+    }
 
-  });
+
+    try {
+
+      rateSelect.disabled = true;
+
+      rateSelect.innerHTML = `
+        <option value="">
+          Loading FBR rates...
+        </option>
+      `;
 
 
-  // Select Sale Type
-  saleTypeButtons.forEach(button => {
+      const environment =
+        $("#environment").value;
 
-  button.addEventListener("click", async () => {
 
-    const value = button.dataset.value || "";
-    const id = button.dataset.id || "";
+      const params =
+        new URLSearchParams({
+          trans_type_id:
+            transactionTypeId,
 
-    saleTypeSearch.value = value;
-    saleTypeValue.value = value;
+          date:
+            invoiceDate,
 
-    $(".sale-type-id", item).value = id;
+          environment:
+            environment
+        });
 
-    saleTypeSearch.setCustomValidity("");
 
-    saleTypeOptions.classList.add("hidden");
+      const response =
+        await fetch(
+          `/api/fbr/reference/rates?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Accept": "application/json"
+            }
+          }
+        );
 
-    // Load valid FBR rates for selected sale type
-    await loadRates(item);
 
-  });
+      if (!response.ok) {
 
-});
+        const errorText =
+          await response.text();
 
-}
 
-  // ============================
-  // SUMMARY
-  // ============================
+        throw new Error(
+          `Rate API failed: ${response.status} - ${errorText}`
+        );
 
-  $$("input[type='number']", item)
-    .forEach(input => {
+      }
 
-      input.addEventListener(
-        "input",
-        updateSummary
+
+      const rates =
+        await response.json();
+
+
+      rateSelect.innerHTML = `
+        <option value="">
+          Select Rate
+        </option>
+      `;
+
+
+      rates.forEach(
+        rate => {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          const description =
+            rate.description ??
+            rate.ratE_DESC ??
+            rate.rateDesc ??
+            "";
+
+
+          const id =
+            rate.id ??
+            rate.ratE_ID ??
+            rate.rateId ??
+            "";
+
+
+          const numericValue =
+            rate.value ??
+            rate.ratE_VALUE ??
+            rate.rateValue ??
+            "";
+
+
+          option.value =
+            description;
+
+          option.textContent =
+            description;
+
+
+          // Important:
+          // FBR identifiers needed downstream
+          option.dataset.id =
+            id;
+
+          option.dataset.value =
+            numericValue;
+
+
+          rateSelect.appendChild(
+            option
+          );
+
+        }
       );
 
-    });
 
-}
-
-async function loadRates(item) {
-
-  const transactionTypeId =
-    $(".sale-type-id", item)?.value;
-
-  const sellerProvinceCode =
-    $("#sellerProvinceCode")?.value;
-
-  const invoiceDate =
-    $("#invoiceDate")?.value;
-
-  const rateSelect =
-    $(".rate", item);
+      rateSelect.disabled = false;
 
 
-  if (!transactionTypeId) {
+    } catch (error) {
 
-    rateSelect.disabled = true;
+      console.error(
+        "Unable to load FBR rates:",
+        error
+      );
 
-    rateSelect.innerHTML =
-      '<option value="">Select Sale Type first</option>';
+
+      rateSelect.innerHTML = `
+        <option value="">
+          Unable to load rates
+        </option>
+      `;
+
+
+      rateSelect.disabled = true;
+
+    }
+
+  }
+
+  async function loadUoms(item) {
+
+  const hsCode =
+    $(".hs-code-value", item)?.value;
+
+  const annexureId = 3;
+
+  const environment =
+    $("#environment")?.value;
+
+    console.log(
+  "UOM lookup:",
+  {
+    hs_code: hsCode,
+    annexure_id: annexureId,
+    environment: environment
+  }
+);
+
+  const uomSearch =
+    $(".uom-search", item);
+
+  const uomValue =
+    $(".uom-value", item);
+
+  const uomOptions =
+    $(".uom-options", item);
+
+
+  if (
+    !uomSearch ||
+    !uomValue ||
+    !uomOptions
+  ) {
+    return;
+  }
+
+
+  uomValue.value = "";
+
+  uomSearch.value = "";
+
+
+  if (!hsCode) {
+
+    uomSearch.placeholder =
+      "Select HS Code first";
+
+    uomSearch.disabled = true;
+
+    uomOptions.innerHTML = "";
 
     return;
   }
 
 
-  if (!sellerProvinceCode) {
+  if (!annexureId) {
 
-    rateSelect.disabled = true;
+    uomSearch.placeholder =
+      "Select Sale Type first";
 
-    rateSelect.innerHTML =
-      '<option value="">Seller province code missing</option>';
+    uomSearch.disabled = true;
 
-    console.error(
-      "tenant_province_code is missing from session"
-    );
+    uomOptions.innerHTML = "";
 
     return;
   }
@@ -1849,113 +2639,384 @@ async function loadRates(item) {
 
   try {
 
-    rateSelect.disabled = true;
+    uomSearch.disabled = true;
 
-    rateSelect.innerHTML =
-      '<option value="">Loading FBR rates...</option>';
+    uomSearch.placeholder =
+      "Loading valid UOMs...";
 
-    const environment =
-   document.getElementById("environment").value;
-
-    const params = new URLSearchParams({
-      trans_type_id: transactionTypeId,
-      date: invoiceDate,
-      environment: environment
-    });
+    uomOptions.innerHTML = "";
 
 
-    const response = await fetch(
-      `/api/fbr/reference/rates?${params.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          "Accept": "application/json"
+    const params =
+      new URLSearchParams({
+        hs_code: hsCode,
+        annexure_id: annexureId,
+        environment: environment
+      });
+
+
+    const response =
+      await fetch(
+        `/api/fbr/reference/uoms?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
         }
-      }
-    );
+      );
 
 
     if (!response.ok) {
 
+      const errorText =
+        await response.text();
+
       throw new Error(
-        `Rate API failed: ${response.status} - ${errorText}`
+        `UOM API failed: ${response.status} - ${errorText}`
       );
 
     }
 
 
-    const rates = await response.json();
+    const uoms =
+      await response.json();
 
 
-    rateSelect.innerHTML =
-      '<option value="">Select Rate</option>';
+    if (!uoms.length) {
+
+      uomSearch.placeholder =
+        "No valid UOMs found";
+
+      uomSearch.disabled = true;
+
+      return;
+    }
 
 
-    rates.forEach(rate => {
+    uoms.forEach(uom => {
 
-      const option =
-        document.createElement("option");
+      const button =
+        document.createElement("button");
 
+      button.type = "button";
 
-      /*
-       Adjust these fallbacks depending on
-       the normalized JSON returned by FastAPI.
-      */
+      button.dataset.value =
+        uom.description;
 
-      const description =
-        rate.description ??
-        rate.ratE_DESC ??
-        rate.rateDesc ??
-        "";
+      button.dataset.id =
+        uom.id;
 
-
-      const id =
-        rate.id ??
-        rate.ratE_ID ??
-        rate.rateId ??
-        "";
+      button.textContent =
+        uom.description;
 
 
-      const numericValue =
-        rate.value ??
-        rate.ratE_VALUE ??
-        rate.rateValue ??
-        "";
+      button.addEventListener(
+        "click",
+        () => {
+
+          uomSearch.value =
+            uom.description;
+
+          uomValue.value =
+            uom.description;
+
+          uomSearch
+            .setCustomValidity("");
+
+          uomOptions
+            .classList
+            .add("hidden");
+
+        }
+      );
 
 
-      option.value = description;
-
-      option.textContent = description;
-
-      option.dataset.id = id;
-
-      option.dataset.value = numericValue;
-
-
-      rateSelect.appendChild(option);
+      uomOptions.appendChild(button);
 
     });
 
 
-    rateSelect.disabled = false;
+    uomSearch.disabled = false;
+
+    uomSearch.placeholder =
+      "Search UOM";
 
 
   } catch (error) {
 
     console.error(
-      "Unable to load FBR rates:",
+      "Unable to load UOMs:",
       error
     );
 
 
-    rateSelect.innerHTML =
-      '<option value="">Unable to load rates</option>';
+    uomSearch.placeholder =
+      "Unable to load UOMs";
 
-    rateSelect.disabled = true;
+    uomSearch.disabled = true;
 
   }
 
 }
+
+  async function loadSroSchedules(item) {
+
+  const rateId =
+    $(".rate-id", item)?.value;
+
+  const invoiceDate =
+    $("#invoiceDate")?.value;
+
+  const environment =
+    $("#environment")?.value;
+
+  const sroSelect =
+    $(".sro-schedule", item);
+
+
+  if (!sroSelect) {
+    return;
+  }
+
+
+  if (!rateId) {
+
+    sroSelect.disabled = true;
+
+    sroSelect.innerHTML =
+      '<option value="">Select Rate first</option>';
+
+    return;
+  }
+
+
+  if (!invoiceDate) {
+
+    sroSelect.disabled = true;
+
+    sroSelect.innerHTML =
+      '<option value="">Select invoice date first</option>';
+
+    return;
+  }
+
+
+  try {
+
+    sroSelect.disabled = true;
+
+    sroSelect.innerHTML =
+      '<option value="">Loading SRO schedules...</option>';
+
+
+    const params =
+      new URLSearchParams({
+        rate_id: rateId,
+        date: invoiceDate,
+        environment: environment
+      });
+
+
+    const response =
+      await fetch(
+        `/api/fbr/reference/sro-schedules?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+
+    if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      throw new Error(
+        `SRO Schedule API failed: ${response.status} - ${errorText}`
+      );
+
+    }
+
+
+    const schedules =
+      await response.json();
+
+
+    sroSelect.innerHTML =
+      '<option value="">Select SRO Schedule</option>';
+
+
+    schedules.forEach(schedule => {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        schedule.description;
+
+      option.textContent =
+        schedule.description;
+
+      option.dataset.id =
+        schedule.id;
+
+      sroSelect.appendChild(option);
+
+    });
+
+
+    sroSelect.disabled = false;
+
+
+  } catch (error) {
+
+    console.error(
+      "Unable to load SRO schedules:",
+      error
+    );
+
+    sroSelect.innerHTML =
+      '<option value="">Unable to load SRO schedules</option>';
+
+    sroSelect.disabled = true;
+
+  }
+
+}
+
+async function loadSroItems(item) {
+
+  const sroId =
+    $(".sro-id", item)?.value;
+
+  const invoiceDate =
+    $("#invoiceDate")?.value;
+
+  const environment =
+    $("#environment")?.value;
+
+  const sroItemSelect =
+    $(".sro-item", item);
+
+
+  if (!sroItemSelect) {
+    return;
+  }
+
+
+  if (!sroId) {
+
+    sroItemSelect.disabled = true;
+
+    sroItemSelect.innerHTML =
+      '<option value="">Select SRO Schedule first</option>';
+
+    return;
+  }
+
+
+  if (!invoiceDate) {
+
+    sroItemSelect.disabled = true;
+
+    sroItemSelect.innerHTML =
+      '<option value="">Select invoice date first</option>';
+
+    return;
+  }
+
+
+  try {
+
+    sroItemSelect.disabled = true;
+
+    sroItemSelect.innerHTML =
+      '<option value="">Loading SRO items...</option>';
+
+
+    const params =
+      new URLSearchParams({
+        sro_id: sroId,
+        date: invoiceDate,
+        environment: environment
+      });
+
+
+    const response =
+      await fetch(
+        `/api/fbr/reference/sro-items?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+
+    if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      throw new Error(
+        `SRO Item API failed: ${response.status} - ${errorText}`
+      );
+
+    }
+
+
+    const items =
+      await response.json();
+
+
+    sroItemSelect.innerHTML =
+      '<option value="">Select SRO Item Serial No.</option>';
+
+
+    items.forEach(sroItem => {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        sroItem.description;
+
+      option.textContent =
+        sroItem.description;
+
+      option.dataset.id =
+        sroItem.id;
+
+      sroItemSelect.appendChild(option);
+
+    });
+
+
+    sroItemSelect.disabled = false;
+
+
+  } catch (error) {
+
+    console.error(
+      "Unable to load SRO items:",
+      error
+    );
+
+
+    sroItemSelect.innerHTML =
+      '<option value="">Unable to load SRO items</option>';
+
+    sroItemSelect.disabled = true;
+
+  }
+
+}
+
 
   // =============================================================
   // RENUMBER ITEMS
@@ -1963,12 +3024,23 @@ async function loadRates(item) {
 
   function renumberItems() {
 
-    $$(".invoice-item").forEach((item, index) => {
+    $$(".invoice-item")
+      .forEach(
+        (item, index) => {
 
-      $(".item-number", item).textContent =
-        index + 1;
+          const number =
+            $(".item-number", item);
 
-    });
+
+          if (number) {
+
+            number.textContent =
+              index + 1;
+
+          }
+
+        }
+      );
 
   }
 
@@ -1979,98 +3051,103 @@ async function loadRates(item) {
 
   function updateSummary() {
 
-    const items = $$(".invoice-item");
+    const items =
+      $$(".invoice-item");
 
 
     let exclusive = 0;
-
     let salesTax = 0;
-
     let otherTax = 0;
-
     let discount = 0;
-
     let total = 0;
 
 
-    items.forEach(item => {
+    items.forEach(
+      item => {
+
+        const excl =
+          Number(
+            $(".value-excl", item)
+              ?.value || 0
+          );
 
 
-      const excl =
-        Number(
-          $(".value-excl", item)?.value || 0
-        );
+        const st =
+          Number(
+            $(".sales-tax", item)
+              ?.value || 0
+          );
 
 
-      const st =
-        Number(
-          $(".sales-tax", item)?.value || 0
-        );
+        const extra =
+          Number(
+            $(".extra-tax", item)
+              ?.value || 0
+          );
 
 
-      const extra =
-        Number(
-          $(".extra-tax", item)?.value || 0
-        );
+        const further =
+          Number(
+            $(".further-tax", item)
+              ?.value || 0
+          );
 
 
-      const further =
-        Number(
-          $(".further-tax", item)?.value || 0
-        );
+        const fed =
+          Number(
+            $(".fed-payable", item)
+              ?.value || 0
+          );
 
 
-      const fed =
-        Number(
-          $(".fed-payable", item)?.value || 0
-        );
+        const disc =
+          Number(
+            $(".discount", item)
+              ?.value || 0
+          );
 
 
-      const disc =
-        Number(
-          $(".discount", item)?.value || 0
-        );
+        exclusive += excl;
+
+        salesTax += st;
+
+        otherTax +=
+          extra +
+          further +
+          fed;
+
+        discount += disc;
 
 
-      exclusive += excl;
-
-      salesTax += st;
-
-      otherTax +=
-        extra +
-        further +
-        fed;
-
-      discount += disc;
+        const computedTotal =
+          excl +
+          st +
+          extra +
+          further +
+          fed -
+          disc;
 
 
-      const computedTotal =
-        excl +
-        st +
-        extra +
-        further +
-        fed -
-        disc;
+        total +=
+          computedTotal;
 
 
-      total += computedTotal;
+        const totalInput =
+          $(".total-values", item);
 
 
-      const totalInput =
-        $(".total-values", item);
+        if (totalInput) {
 
+          totalInput.value =
+            Math.max(
+              computedTotal,
+              0
+            ).toFixed(2);
 
-      if (totalInput) {
-
-        totalInput.value =
-          Math.max(
-            computedTotal,
-            0
-          ).toFixed(2);
+        }
 
       }
-
-    });
+    );
 
 
     $("#summary-items").textContent =
@@ -2106,7 +3183,8 @@ async function loadRates(item) {
   function toggleEnvironment() {
 
     const isSandbox =
-      $("#environment").value === "sandbox";
+      $("#environment").value ===
+      "sandbox";
 
 
     $("#scenario-field")
@@ -2153,7 +3231,8 @@ async function loadRates(item) {
   function toggleBuyerRegistration() {
 
     const registered =
-      $("#buyerRegistrationType").value ===
+      $("#buyerRegistrationType")
+        .value ===
       "Registered";
 
 
@@ -2161,10 +3240,11 @@ async function loadRates(item) {
       registered;
 
 
-    $("#buyer-ntn-hint").textContent =
-      registered
-        ? "Required for registered buyer."
-        : "Optional for unregistered buyer.";
+    $("#buyer-ntn-hint")
+      .textContent =
+        registered
+          ? "Required for registered buyer."
+          : "Optional for unregistered buyer.";
 
   }
 
@@ -2207,7 +3287,31 @@ async function loadRates(item) {
   $("#environment")
     .addEventListener(
       "change",
-      toggleEnvironment
+      () => {
+
+        toggleEnvironment();
+
+
+        // Environment change can change FBR reference data.
+        $$(".invoice-item")
+          .forEach(
+            item => {
+
+              const saleTypeId =
+                $(".sale-type-id", item)
+                  ?.value;
+
+
+              if (saleTypeId) {
+
+                loadRates(item);
+
+              }
+
+            }
+          );
+
+      }
     );
 
 
@@ -2224,237 +3328,550 @@ async function loadRates(item) {
       toggleInvoiceReference
     );
 
-  $("#invoiceDate").addEventListener("change", () => {
 
-  $$(".invoice-item").forEach(item => {
+  $("#invoiceDate")
+    .addEventListener(
+      "change",
+      () => {
 
-    const saleTypeId =
-      $(".sale-type-id", item)?.value;
+        $$(".invoice-item")
+          .forEach(
+            item => {
 
-    if (saleTypeId) {
-      loadRates(item);
+              const saleTypeId =
+                $(".sale-type-id", item)
+                  ?.value;
+
+
+              if (saleTypeId) {
+
+                loadRates(item);
+
+              }
+
+            }
+          );
+
+      }
+    );
+
+
+  // =============================================================
+  // CLOSE SEARCHABLE DROPDOWNS
+  // =============================================================
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      $$(".searchable-select")
+        .forEach(
+          select => {
+
+            if (
+              select.contains(
+                event.target
+              )
+            ) {
+              return;
+            }
+
+
+            $(".uom-options", select)
+              ?.classList
+              .add("hidden");
+
+
+            $(".sale-type-options", select)
+              ?.classList
+              .add("hidden");
+
+
+            $(".hs-code-options", select)
+              ?.classList
+              .add("hidden");
+
+          }
+        );
+
     }
-
-  });
-
-});
-
+  );
 
 
   // =============================================================
   // SUBMIT FORM TO FBR
   // =============================================================
 
-  $("#invoice-form").addEventListener("submit", async event => {
+  $("#invoice-form")
+    .addEventListener(
+      "submit",
+      async event => {
 
-    event.preventDefault();
+        event.preventDefault();
 
-    const form = event.currentTarget;
 
-    if (!form.reportValidity()) {
-      return;
-    }
+        const form =
+          event.currentTarget;
 
-    // Searchable controls store their actual FBR values in hidden inputs.
-    for (const item of $$(".invoice-item")) {
 
-      const saleTypeSearch = $(".sale-type-search", item);
-      const saleTypeValue = $(".sale-type-value", item);
+        if (!form.reportValidity()) {
+          return;
+        }
 
-      if (!saleTypeValue?.value) {
-        saleTypeSearch?.setCustomValidity("Please select a Sale Type.");
-        saleTypeSearch?.reportValidity();
-        return;
+
+        // -------------------------------------------------------
+        // VALIDATE CUSTOM SEARCHABLE FIELDS
+        // -------------------------------------------------------
+
+        for (
+          const item of
+          $$(".invoice-item")
+        ) {
+
+          // HS Code
+          const hsCodeSearch =
+            $(".hs-code-search", item);
+
+          const hsCodeValue =
+            $(".hs-code-value", item);
+
+
+          if (!hsCodeValue?.value) {
+
+            hsCodeSearch
+              ?.setCustomValidity(
+                "Please select a valid HS Code."
+              );
+
+
+            hsCodeSearch
+              ?.reportValidity();
+
+
+            return;
+          }
+
+
+          // Sale Type
+          const saleTypeSearch =
+            $(".sale-type-search", item);
+
+          const saleTypeValue =
+            $(".sale-type-value", item);
+
+
+          if (!saleTypeValue?.value) {
+
+            saleTypeSearch
+              ?.setCustomValidity(
+                "Please select a Sale Type."
+              );
+
+
+            saleTypeSearch
+              ?.reportValidity();
+
+
+            return;
+          }
+
+
+          // UOM
+          const uomSearch =
+            $(".uom-search", item);
+
+          const uomValue =
+            $(".uom-value", item);
+
+
+          if (!uomValue?.value) {
+
+            uomSearch
+              ?.setCustomValidity(
+                "Please select a UOM."
+              );
+
+
+            uomSearch
+              ?.reportValidity();
+
+
+            return;
+          }
+
+        }
+
+
+        const numberValue =
+          (item, selector) =>
+            Number(
+              $(selector, item)
+                ?.value || 0
+            );
+
+        const optionalNumberValue = (item, selector) => {
+
+        const raw =
+          $(selector, item)?.value?.trim();
+
+        if (!raw) {
+          return undefined;
+        }
+
+        return Number(raw);
+      };
+
+      const optionalNumericOrEmpty = (item, selector) => {
+      const raw = $(selector, item)?.value?.trim();
+
+      if (!raw) {
+        return "";
       }
 
-      const uomSearch = $(".uom-search", item);
-      const uomValue = $(".uom-value", item);
-
-      if (!uomValue?.value) {
-        uomSearch?.setCustomValidity("Please select a UOM.");
-        uomSearch?.reportValidity();
-        return;
-      }
-    }
-
-    const numberValue = (item, selector) =>
-      Number($(selector, item)?.value || 0);
-
-    const payload = {
-      environment: $("#environment").value,
-      invoiceType: $("#invoiceType").value,
-      invoiceDate: $("#invoiceDate").value,
-
-      sellerNTNCNIC:
-        form.elements["sellerNTNCNIC"].value,
-
-      sellerBusinessName:
-        form.elements["sellerBusinessName"].value,
-
-      sellerProvince:
-        form.elements["sellerProvince"].value,
-
-      sellerAddress:
-        form.elements["sellerAddress"].value,
-
-      buyerNTNCNIC:
-        $("#buyerNTNCNIC").value,
-
-      buyerBusinessName:
-        form.elements["buyerBusinessName"].value,
-
-      buyerProvince:
-        $("#buyerProvince").value,
-
-      buyerAddress:
-        form.elements["buyerAddress"].value,
-
-      buyerRegistrationType:
-        $("#buyerRegistrationType").value,
-
-      items: $$(".invoice-item").map(item => ({
-        hsCode:
-          $(".hs-code", item).value.trim(),
-
-        productDescription:
-          $(".product-description", item).value.trim(),
-
-        rate:
-          $(".rate", item).value,
-
-        uoM:
-          $(".uom-value", item).value,
-
-        quantity:
-          numberValue(item, ".quantity"),
-
-        totalValues:
-          numberValue(item, ".total-values"),
-
-        valueSalesExcludingST:
-          numberValue(item, ".value-excl"),
-
-        fixedNotifiedValueOrRetailPrice:
-          numberValue(
-            item,
-            '[name*="[fixedNotifiedValueOrRetailPrice]"]'
-          ),
-
-        salesTaxApplicable:
-          numberValue(item, ".sales-tax"),
-
-        salesTaxWithheldAtSource:
-          numberValue(
-            item,
-            '[name*="[salesTaxWithheldAtSource]"]'
-          ),
-
-        extraTax:
-          numberValue(item, ".extra-tax"),
-
-        furtherTax:
-          numberValue(item, ".further-tax"),
-
-        sroScheduleNo:
-          $(".sro-schedule", item)?.value || "",
-
-        fedPayable:
-          numberValue(item, ".fed-payable"),
-
-        discount:
-          numberValue(item, ".discount"),
-
-        saleType:
-          $(".sale-type-value", item).value,
-
-        sroItemSerialNo:
-          $(".sro-item", item)?.value || ""
-      }))
+      return Number(raw);
     };
 
-    const invoiceRefNo =
-      $("#invoiceRefNo").value.trim();
 
-    if (invoiceRefNo) {
-      payload.invoiceRefNo = invoiceRefNo;
-    }
+        // -------------------------------------------------------
+        // BUILD FBR PAYLOAD
+        // -------------------------------------------------------
 
-    if ($("#environment").value === "sandbox") {
+        const payload = {
 
-      const scenarioId =
-        $("#scenarioId").value.trim();
+          environment:
+            $("#environment").value,
 
-      if (scenarioId) {
-        payload.scenarioId = scenarioId;
-      }
-    }
+          invoiceType:
+            $("#invoiceType").value,
 
-    console.log(
-      "FBR payload:",
-      JSON.stringify(payload, null, 2)
-    );
+          invoiceDate:
+            $("#invoiceDate").value,
 
-    const submitButtons =
-      $$('button[type="submit"]', form);
 
-    submitButtons.forEach(button => {
-      button.disabled = true;
-    });
+          sellerNTNCNIC:
+            form.elements[
+              "sellerNTNCNIC"
+            ].value,
 
-    try {
 
-      const response = await fetch(
-        "/invoices/submit",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify(payload)
+          sellerBusinessName:
+            form.elements[
+              "sellerBusinessName"
+            ].value,
+
+
+          sellerProvince:
+            form.elements[
+              "sellerProvince"
+            ].value,
+
+
+          sellerAddress:
+            form.elements[
+              "sellerAddress"
+            ].value,
+
+
+          buyerNTNCNIC:
+            $("#buyerNTNCNIC").value,
+
+
+          buyerBusinessName:
+            form.elements[
+              "buyerBusinessName"
+            ].value,
+
+
+          buyerProvince:
+            $("#buyerProvince").value,
+
+
+          buyerAddress:
+            form.elements[
+              "buyerAddress"
+            ].value,
+
+
+          buyerRegistrationType:
+            $("#buyerRegistrationType")
+              .value,
+
+
+          items:
+            $$(".invoice-item")
+              .map(
+                item => ({
+
+                  // IMPORTANT:
+                  // actual hidden selected HS code
+                  hsCode:
+                    $(".hs-code-value", item)
+                      ?.value
+                      ?.trim() || "",
+
+
+                  // User-defined description
+                  productDescription:
+                    $(".product-description", item)
+                      ?.value
+                      ?.trim() || "",
+
+
+                  rate:
+                    $(".rate", item)
+                      ?.value || "",
+
+
+                  uoM:
+                    $(".uom-value", item)
+                      ?.value || "",
+
+
+                  quantity:
+                    numberValue(
+                      item,
+                      ".quantity"
+                    ),
+
+
+                  totalValues:
+                    numberValue(
+                      item,
+                      ".total-values"
+                    ),
+
+
+                  valueSalesExcludingST:
+                    numberValue(
+                      item,
+                      ".value-excl"
+                    ),
+
+
+                  fixedNotifiedValueOrRetailPrice:
+                    numberValue(
+                      item,
+                      '[name*="[fixedNotifiedValueOrRetailPrice]"]'
+                    ),
+
+
+                  salesTaxApplicable:
+                    numberValue(
+                      item,
+                      ".sales-tax"
+                    ),
+
+
+                  salesTaxWithheldAtSource:
+                    numberValue(
+                      item,
+                      '[name*="[salesTaxWithheldAtSource]"]'
+                    ),
+
+
+                  extraTax:
+                    optionalNumericOrEmpty(
+                      item,
+                      ".extra-tax"
+                    ),
+
+
+                  furtherTax:
+                    optionalNumberValue(
+                      item,
+                      ".further-tax"
+                    ),
+
+
+                  sroScheduleNo:
+                    $(".sro-schedule", item)
+                      ?.value || "",
+
+
+                  fedPayable:
+                    optionalNumberValue(
+                      item,
+                      ".fed-payable"
+                    ),
+
+
+                  discount:
+                    optionalNumberValue(
+                      item,
+                      ".discount"
+                    ),
+
+
+                  saleType:
+                    $(".sale-type-value", item)
+                      ?.value || "",
+
+
+                  sroItemSerialNo:
+                    $(".sro-item", item)
+                      ?.value || ""
+
+                })
+              )
+
+        };
+
+
+        // -------------------------------------------------------
+        // OPTIONAL INVOICE REFERENCE
+        // -------------------------------------------------------
+
+        const invoiceRefNo =
+          $("#invoiceRefNo")
+            .value
+            .trim();
+
+
+        if (invoiceRefNo) {
+
+          payload.invoiceRefNo =
+            invoiceRefNo;
+
         }
-      );
 
-      const result = await response.json();
 
-      console.log("FBR response:", result);
+        // -------------------------------------------------------
+        // SANDBOX SCENARIO
+        // -------------------------------------------------------
 
-      if (!response.ok) {
+        if (
+          $("#environment").value ===
+          "sandbox"
+        ) {
 
-        alert(
-          result.message ||
-          "FBR submission failed."
+          const scenarioId =
+            $("#scenarioId")
+              .value
+              .trim();
+
+
+          if (scenarioId) {
+
+            payload.scenarioId =
+              scenarioId;
+
+          }
+
+        }
+
+
+        console.log(
+          "FBR payload:",
+          JSON.stringify(
+            payload,
+            null,
+            2
+          )
         );
 
-        return;
+
+        // -------------------------------------------------------
+        // SUBMIT
+        // -------------------------------------------------------
+
+        const submitButtons =
+          $$(
+            'button[type="submit"]',
+            form
+          );
+
+
+        submitButtons.forEach(
+          button => {
+
+            button.disabled = true;
+
+          }
+        );
+
+
+        try {
+
+          const response =
+            await fetch(
+              "/invoices/submit",
+              {
+                method: "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "Accept":
+                    "application/json"
+                },
+
+                body:
+                  JSON.stringify(
+                    payload
+                  )
+              }
+            );
+
+
+          const result =
+            await response.json();
+
+
+          console.log(
+            "FBR response:",
+            result
+          );
+
+
+          if (!response.ok) {
+
+            alert(
+              result.message ||
+              "FBR submission failed."
+            );
+
+            return;
+          }
+
+
+          alert(
+            "Invoice submitted successfully to FBR.\n" +
+            "FBR Invoice #: " +
+            (
+              result.invoice_number ||
+              "-"
+            )
+          );
+
+
+        } catch (error) {
+
+          console.error(
+            "Invoice submission error:",
+            error
+          );
+
+
+          alert(
+            "Unable to submit invoice to FBR."
+          );
+
+
+        } finally {
+
+          submitButtons.forEach(
+            button => {
+
+              button.disabled = false;
+
+            }
+          );
+
+        }
+
       }
-
-      alert(
-        "Invoice submitted successfully to FBR.\n" +
-        "FBR Invoice #: " +
-        (result.invoice_number || "-")
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Invoice submission error:",
-        error
-      );
-
-      alert(
-        "Unable to submit invoice to FBR."
-      );
-
-    } finally {
-
-      submitButtons.forEach(button => {
-        button.disabled = false;
-      });
-
-    }
-
-  });
+    );
 
 
   // =============================================================
@@ -2475,23 +3892,6 @@ async function loadRates(item) {
 
     }
   );
-
-  document.addEventListener("click", event => {
-
-  $$(".searchable-select").forEach(select => {
-
-    if (!select.contains(event.target)) {
-
-      const options =
-        $(".uom-options", select);
-
-      options?.classList.add("hidden");
-
-    }
-
-  });
-
-});
 
 </script>
 
