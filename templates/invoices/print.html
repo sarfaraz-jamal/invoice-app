@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        Invoice {{ invoice.invoice_number }}
+    </title>
+
+    <style>
+
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #1f2937;
+            background: #ffffff;
+            font-size: 11px;
+        }
+
+        .invoice-page {
+            width: 100%;
+        }
+
+
+        /* HEADER */
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+
+            padding-bottom: 18px;
+            margin-bottom: 20px;
+
+            border-bottom: 3px solid #111827;
+        }
+
+        .seller-heading {
+            max-width: 60%;
+        }
+
+        .seller-heading h1 {
+            margin: 0 0 8px;
+
+            font-size: 22px;
+            font-weight: 700;
+
+            letter-spacing: -0.02em;
+            color: #111827;
+        }
+
+        .seller-heading div {
+            margin-top: 3px;
+            color: #4b5563;
+            line-height: 1.45;
+        }
+
+
+        .invoice-heading {
+            text-align: right;
+        }
+
+        .invoice-heading h2 {
+            margin: 0 0 12px;
+
+            font-size: 25px;
+            font-weight: 700;
+
+            letter-spacing: .04em;
+            text-transform: uppercase;
+
+            color: #111827;
+        }
+
+        .invoice-heading table {
+            margin-left: auto;
+            border-collapse: collapse;
+        }
+
+        .invoice-heading td {
+            padding: 3px 0 3px 16px;
+        }
+
+        .invoice-heading td:first-child {
+            color: #6b7280;
+        }
+
+        .invoice-heading td:last-child {
+            font-weight: 700;
+            color: #111827;
+        }
+
+
+        /* SELLER / BUYER */
+
+        .party-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            gap: 14px;
+
+            margin-bottom: 20px;
+        }
+
+        .party-box {
+            padding: 15px 16px;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+
+            background: #fafafa;
+
+            min-height: 120px;
+        }
+
+        .party-title {
+            margin-bottom: 8px;
+
+            font-size: 9px;
+            font-weight: 700;
+
+            letter-spacing: .08em;
+            text-transform: uppercase;
+
+            color: #6b7280;
+        }
+
+        .party-name {
+            margin-bottom: 9px;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .party-line {
+            margin-bottom: 4px;
+
+            color: #374151;
+            line-height: 1.4;
+        }
+
+
+        /* ITEMS TABLE */
+
+        .items-table {
+            width: 100%;
+
+            border-collapse: separate;
+            border-spacing: 0;
+
+            margin-bottom: 22px;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+
+            overflow: hidden;
+        }
+
+        .items-table th {
+            padding: 9px 7px;
+
+            background: #f3f4f6;
+
+            border-bottom: 1px solid #d1d5db;
+
+            font-size: 9px;
+            font-weight: 700;
+
+            letter-spacing: .04em;
+            text-transform: uppercase;
+
+            color: #4b5563;
+
+            text-align: left;
+        }
+
+        .items-table td {
+            padding: 9px 7px;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            vertical-align: top;
+
+            color: #1f2937;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .right {
+            text-align: right !important;
+        }
+
+        .center {
+            text-align: center !important;
+        }
+
+
+        /* BOTTOM */
+
+        .invoice-bottom {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+
+            gap: 28px;
+
+            align-items: start;
+        }
+
+
+        /* FBR */
+
+        .fbr-section {
+            padding-top: 4px;
+        }
+
+        .fbr-label {
+            margin-bottom: 10px;
+
+            font-size: 9px;
+            font-weight: 700;
+
+            letter-spacing: .08em;
+            text-transform: uppercase;
+
+            color: #6b7280;
+        }
+
+        .fbr-area {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .fbr-logo {
+            width: 110px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .fbr-qr {
+            width: 1in;
+            height: 1in;
+        }
+
+        .fbr-number {
+            margin-top: 10px;
+
+            font-size: 10px;
+            color: #4b5563;
+        }
+
+        .fbr-number strong {
+            color: #111827;
+        }
+
+
+        /* TOTALS */
+
+        .totals {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals td {
+            padding: 8px 10px;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .totals td:first-child {
+            color: #6b7280;
+        }
+
+        .totals td:last-child {
+            text-align: right;
+
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .grand-total td {
+            padding-top: 12px;
+            padding-bottom: 12px;
+
+            border-top: 2px solid #111827;
+            border-bottom: 2px solid #111827;
+
+            font-size: 14px;
+            font-weight: 700 !important;
+
+            color: #111827 !important;
+        }
+
+
+        /* FOOTER */
+
+        .fbr-meta {
+            display: flex;
+            justify-content: space-between;
+
+            margin-top: 28px;
+            padding-top: 10px;
+
+            border-top: 1px solid #e5e7eb;
+
+            font-size: 9px;
+            color: #9ca3af;
+        }
+
+
+        /* PRINT BUTTON */
+
+        .print-actions {
+            margin-bottom: 18px;
+            text-align: right;
+        }
+
+        .print-button {
+            border: 0;
+
+            background: #111827;
+            color: white;
+
+            padding: 9px 16px;
+
+            cursor: pointer;
+
+            border-radius: 6px;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @media print {
+
+            .print-actions {
+                display: none;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="invoice-page">
+
+
+    <!-- PRINT -->
+
+    <div class="print-actions">
+
+        <button
+            class="print-button"
+            onclick="window.print()"
+        >
+            Print / Save PDF
+        </button>
+
+    </div>
+
+
+    <!-- HEADER -->
+
+    <div class="invoice-header">
+
+        <div class="seller-heading">
+
+            <h1>
+                {{ invoice.seller_business_name }}
+            </h1>
+
+            <div>
+                NTN/CNIC:
+                {{ invoice.seller_ntn_cnic }}
+            </div>
+
+            <div>
+                {{ invoice.seller_address }}
+            </div>
+
+            <div>
+                {{ invoice.seller_province }}
+            </div>
+
+        </div>
+
+
+        <div class="invoice-heading">
+
+            <h2>
+                Tax Invoice
+            </h2>
+
+            <table>
+
+                <tr>
+                    <td>
+                        Invoice No.
+                    </td>
+
+                    <td>
+                        {{ invoice.invoice_number }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        Date
+                    </td>
+
+                    <td>
+                        {{ invoice.invoice_date }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- SELLER / BUYER -->
+
+    <div class="party-row">
+
+        <div class="party-box">
+
+            <div class="party-title">
+                Seller
+            </div>
+
+            <div class="party-name">
+                {{ invoice.seller_business_name }}
+            </div>
+
+            <div class="party-line">
+                NTN/CNIC:
+                {{ invoice.seller_ntn_cnic }}
+            </div>
+
+            <div class="party-line">
+                {{ invoice.seller_address }}
+            </div>
+
+            <div class="party-line">
+                {{ invoice.seller_province }}
+            </div>
+
+        </div>
+
+
+        <div class="party-box">
+
+            <div class="party-title">
+                Bill To
+            </div>
+
+            <div class="party-name">
+                {{ invoice.buyer_business_name }}
+            </div>
+
+            <div class="party-line">
+                NTN/CNIC:
+                {{ invoice.buyer_ntn_cnic or "—" }}
+            </div>
+
+            <div class="party-line">
+                {{ invoice.buyer_registration_type }}
+            </div>
+
+            <div class="party-line">
+                {{ invoice.buyer_address }}
+            </div>
+
+            <div class="party-line">
+                {{ invoice.buyer_province }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ITEMS -->
+
+    <table class="items-table">
+
+        <thead>
+
+            <tr>
+
+                <th>#</th>
+
+                <th>
+                    HS Code
+                </th>
+
+                <th>
+                    Description
+                </th>
+
+                <th>
+                    UOM
+                </th>
+
+                <th class="right">
+                    Qty
+                </th>
+
+                <th class="right">
+                    Fixed / Retail
+                </th>
+
+                <th class="right">
+                    Tax Rate
+                </th>
+
+                <th class="right">
+                    Value Excl. ST
+                </th>
+
+                <th class="right">
+                    Sales Tax
+                </th>
+
+                <th class="right">
+                    Total
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for item in invoice.items %}
+
+            <tr>
+
+                <td class="center">
+                    {{ item.line_number }}
+                </td>
+
+                <td>
+                    {{ item.hs_code }}
+                </td>
+
+                <td>
+                    {{ item.product_description }}
+                </td>
+
+                <td>
+                    {{ item.uom }}
+                </td>
+
+                <td class="right">
+                    {{ item.quantity }}
+                </td>
+
+                <td class="right">
+
+                    {{ "{:,.2f}".format(
+                        item.fixed_notified_value_or_retail_price
+                    ) }}
+
+                </td>
+
+                <td class="right">
+                    {{ item.rate }}
+                </td>
+
+                <td class="right">
+
+                    {{ "{:,.2f}".format(
+                        item.value_sales_excluding_st
+                    ) }}
+
+                </td>
+
+                <td class="right">
+
+                    {{ "{:,.2f}".format(
+                        item.sales_tax_applicable
+                    ) }}
+
+                </td>
+
+                <td class="right">
+
+                    <strong>
+
+                        {{ "{:,.2f}".format(
+                            item.total_values
+                        ) }}
+
+                    </strong>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+
+    <!-- BOTTOM -->
+
+    <div class="invoice-bottom">
+
+
+        <!-- FBR -->
+
+        <div class="fbr-section">
+
+            {% if invoice.status == "accepted" and invoice.qr_data %}
+
+            <div class="fbr-label">
+                FBR Digital Invoice Verification
+            </div>
+
+            <div class="fbr-area">
+
+                <img
+                    src="/static/fbr_logo.png"
+                    class="fbr-logo"
+                    alt="FBR Digital Invoicing System"
+                >
+
+                <img
+                    src="/invoices/{{ invoice.id }}/qr"
+                    class="fbr-qr"
+                    alt="FBR QR Code"
+                >
+
+            </div>
+
+            <div class="fbr-number">
+
+                <strong>
+                    FBR Invoice No:
+                </strong>
+
+                {{ invoice.fbr_invoice_number }}
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- TOTALS -->
+
+        <table class="totals">
+
+            <tr>
+
+                <td>
+                    Subtotal
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.subtotal_excluding_st
+                    ) }}
+
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Sales Tax
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.total_sales_tax
+                    ) }}
+
+                </td>
+
+            </tr>
+
+
+            {% if invoice.total_further_tax %}
+
+            <tr>
+
+                <td>
+                    Further Tax
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.total_further_tax
+                    ) }}
+
+                </td>
+
+            </tr>
+
+            {% endif %}
+
+
+            {% if invoice.total_extra_tax %}
+
+            <tr>
+
+                <td>
+                    Extra Tax
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.total_extra_tax
+                    ) }}
+
+                </td>
+
+            </tr>
+
+            {% endif %}
+
+
+            {% if invoice.total_fed_payable %}
+
+            <tr>
+
+                <td>
+                    FED
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.total_fed_payable
+                    ) }}
+
+                </td>
+
+            </tr>
+
+            {% endif %}
+
+
+            {% if invoice.total_discount %}
+
+            <tr>
+
+                <td>
+                    Discount
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.total_discount
+                    ) }}
+
+                </td>
+
+            </tr>
+
+            {% endif %}
+
+
+            <tr class="grand-total">
+
+                <td>
+                    Grand Total
+                </td>
+
+                <td>
+
+                    {{ invoice.currency }}
+
+                    {{ "{:,.2f}".format(
+                        invoice.grand_total
+                    ) }}
+
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="fbr-meta">
+
+        <span>
+            FBR Status:
+            {{ invoice.fbr_submission_status or "—" }}
+        </span>
+
+        <span>
+            {{ invoice.fbr_environment|capitalize }}
+        </span>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>

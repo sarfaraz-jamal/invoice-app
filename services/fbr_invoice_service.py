@@ -147,7 +147,13 @@ def _get_post_url(
     if environment == "production":
         return FBR_PRODUCTION_POST_URL
 
-    return FBR_SANDBOX_POST_URL
+    elif environment == "sandbox":
+        return FBR_SANDBOX_POST_URL
+
+    else:
+        raise FBRSubmissionError(
+            f"Invalid FBR environment: {environment}"
+        )
 
 
 # =========================================================
@@ -422,14 +428,18 @@ async def submit_invoice(
 
     if response.status_code != 200:
 
+        print("========== FBR HTTP ERROR ==========")
+        print("Status:", response.status_code)
+        print("Response:", response.text)
+        print("====================================")
+
         raise FBRSubmissionError(
             (
-                "Unexpected response from FBR. "
-                f"HTTP {response.status_code}"
+                f"Unexpected response from FBR. "
+                f"HTTP {response.status_code}. "
+                f"Response: {response.text}"
             ),
-            status_code=(
-                response.status_code
-            ),
+            status_code=response.status_code,
         )
 
     # ---------------------------------------------

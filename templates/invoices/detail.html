@@ -1,0 +1,319 @@
+{% extends "base.html" %} 
+ 
+{% block content %} 
+ 
+<div class="invoice-detail"> 
+ 
+    <!-- Header --> 
+    <div class="invoice-topbar"> 
+        <div> 
+            <div class="invoice-kicker">Tax Invoice</div> 
+            <h1>{{ invoice.invoice_number }}</h1> 
+            <div class="invoice-date"> 
+                {{ invoice.invoice_date }} 
+            </div> 
+        </div> 
+    </div> 
+
+   
+</div>
+ 
+ 
+    <!-- FBR Summary --> 
+    <div class="invoice-card fbr-summary"> 
+ 
+        <div> 
+            <span class="field-label">Environment</span> 
+            <div class="field-value"> 
+                {{ invoice.fbr_environment|capitalize }} 
+            </div> 
+        </div> 
+ 
+        <div> 
+            <span class="field-label">FBR Invoice Number</span> 
+            <div class="field-value"> 
+                {{ invoice.fbr_invoice_number or "—" }} 
+            </div> 
+        </div> 
+ 
+        <div> 
+            <span class="field-label">Submission Status</span> 
+            <div class="field-value"> 
+                {{ invoice.fbr_submission_status or "—" }} 
+            </div> 
+        </div> 
+ 
+    </div> 
+ 
+ 
+    {% if invoice.fbr_error_code %} 
+    <div class="invoice-error"> 
+        <strong>{{ invoice.fbr_error_code }}</strong> 
+        <span>{{ invoice.fbr_error_message }}</span> 
+    </div> 
+    {% endif %} 
+ 
+ 
+    <!-- Seller / Buyer --> 
+    <div class="party-grid"> 
+ 
+        <div class="invoice-card party-card"> 
+            <div class="section-label">Seller</div> 
+ 
+            <h3>{{ invoice.seller_business_name }}</h3> 
+ 
+            <div class="party-details"> 
+                <div> 
+                    <span>NTN/CNIC</span> 
+                    <strong>{{ invoice.seller_ntn_cnic }}</strong> 
+                </div> 
+ 
+                <div> 
+                    <span>Province</span> 
+                    <strong>{{ invoice.seller_province }}</strong> 
+                </div> 
+ 
+                <div class="party-address"> 
+                    <span>Address</span> 
+                    <strong>{{ invoice.seller_address }}</strong> 
+                </div> 
+            </div> 
+        </div> 
+ 
+ 
+        <div class="invoice-card party-card"> 
+            <div class="section-label">Buyer</div> 
+ 
+            <h3>{{ invoice.buyer_business_name }}</h3> 
+ 
+            <div class="party-details"> 
+                <div> 
+                    <span>NTN/CNIC</span> 
+                    <strong> 
+                        {{ invoice.buyer_ntn_cnic or "—" }} 
+                    </strong> 
+                </div> 
+ 
+                <div> 
+                    <span>Registration</span> 
+                    <strong> 
+                        {{ invoice.buyer_registration_type }} 
+                    </strong> 
+                </div> 
+ 
+                <div> 
+                    <span>Province</span> 
+                    <strong>{{ invoice.buyer_province }}</strong> 
+                </div> 
+ 
+                <div class="party-address"> 
+                    <span>Address</span> 
+                    <strong>{{ invoice.buyer_address }}</strong> 
+                </div> 
+            </div> 
+        </div> 
+ 
+    </div> 
+ 
+ 
+    <!-- Items --> 
+    <div class="invoice-card items-card"> 
+ 
+        <div class="section-heading"> 
+            <h3>Invoice Items</h3> 
+        </div> 
+ 
+        <div class="table-responsive"> 
+ 
+            <table class="invoice-items-table"> 
+ 
+                <thead> 
+                    <tr> 
+                        <th>#</th> 
+                        <th>HS Code</th> 
+                        <th>Description</th> 
+                        <th>UOM</th> 
+                        <th class="text-right">Qty</th> 
+                        <th class="text-right">Fixed / Retail Price</th> 
+                        <th class="text-right">Tax Rate</th> 
+                        <th class="text-right">Value Excl. ST</th> 
+                        <th class="text-right">Sales Tax</th> 
+                        <th class="text-right">Total</th> 
+                    </tr> 
+                </thead> 
+ 
+                <tbody> 
+ 
+                    {% for item in invoice.items %} 
+ 
+                    <tr> 
+                        <td>{{ item.line_number }}</td> 
+ 
+                        <td class="mono"> 
+                            {{ item.hs_code }} 
+                        </td> 
+ 
+                        <td> 
+                            {{ item.product_description }} 
+                        </td> 
+ 
+                        <td> 
+                            {{ item.uom }} 
+                        </td> 
+ 
+                        <td class="text-right"> 
+                            {{ item.quantity }} 
+                        </td> 
+ 
+                        <td class="text-right"> 
+                            {{ "{:,.2f}".format(
+                                item.fixed_notified_value_or_retail_price
+                            ) }} 
+                        </td> 
+ 
+                        <td class="text-right"> 
+                            {{ item.rate }} 
+                        </td> 
+ 
+                        <td class="text-right"> 
+                            {{ "{:,.2f}".format(
+                                item.value_sales_excluding_st
+                            ) }} 
+                        </td> 
+ 
+                        <td class="text-right"> 
+                            {{ "{:,.2f}".format(
+                                item.sales_tax_applicable
+                            ) }} 
+                        </td> 
+ 
+                        <td class="text-right"> 
+                            <strong> 
+                                {{ "{:,.2f}".format(
+                                    item.total_values
+                                ) }} 
+                            </strong> 
+                        </td> 
+                    </tr> 
+ 
+                    {% endfor %} 
+ 
+                </tbody> 
+ 
+            </table> 
+ 
+        </div> 
+ 
+    </div> 
+ 
+ 
+    <!-- Bottom section --> 
+    <div class="invoice-bottom-grid"> 
+ 
+        <!-- FBR Verification --> 
+        <div> 
+ 
+            {% if invoice.status == "accepted" and invoice.qr_data %} 
+ 
+            <div class="invoice-card fbr-verification"> 
+ 
+                <div class="section-label"> 
+                    FBR Verification 
+                </div> 
+ 
+                <div class="fbr-branding"> 
+ 
+                    <img 
+                        src="/static/fbr_logo.png" 
+                        alt="FBR Digital Invoicing System" 
+                        class="fbr-logo" 
+                    > 
+ 
+                    <img 
+                        src="/invoices/{{ invoice.id }}/qr" 
+                        alt="FBR Invoice QR Code" 
+                        class="fbr-qr" 
+                    > 
+ 
+                </div> 
+ 
+                <div class="fbr-number"> 
+                    <span>FBR Invoice No.</span> 
+                    <strong> 
+                        {{ invoice.fbr_invoice_number }} 
+                    </strong> 
+                </div> 
+ 
+            </div> 
+ 
+            {% endif %} 
+ 
+        </div> 
+ 
+ 
+        <!-- Totals --> 
+        <div class="invoice-card totals-card"> 
+ 
+            <div class="totals-row"> 
+                <span>Subtotal</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.subtotal_excluding_st) }} 
+                </strong> 
+            </div> 
+ 
+            <div class="totals-row"> 
+                <span>Sales Tax</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.total_sales_tax) }} 
+                </strong> 
+            </div> 
+ 
+            <div class="totals-row"> 
+                <span>Further Tax</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.total_further_tax) }} 
+                </strong> 
+            </div> 
+ 
+            <div class="totals-row"> 
+                <span>Extra Tax</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.total_extra_tax) }} 
+                </strong> 
+            </div> 
+ 
+            <div class="totals-row"> 
+                <span>FED</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.total_fed_payable) }} 
+                </strong> 
+            </div> 
+ 
+            <div class="totals-row"> 
+                <span>Discount</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.total_discount) }} 
+                </strong> 
+            </div> 
+ 
+            <div class="totals-row grand-total"> 
+                <span>Grand Total</span> 
+                <strong> 
+                    {{ invoice.currency }} 
+                    {{ "{:,.2f}".format(invoice.grand_total) }} 
+                </strong> 
+            </div> 
+ 
+        </div> 
+ 
+    </div> 
+ 
+</div> 
+ 
+{% endblock %}

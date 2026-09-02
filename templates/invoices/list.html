@@ -1,53 +1,295 @@
 {% extends "base.html" %}
 
-
-{% block title %}
-Invoices
-{% endblock %}
-
-
-{% block page_title %}
-Invoices
-{% endblock %}
-
-
-{% block topbar_actions %}
-
-<a href="/invoices/invoice_form" class="btn btn-primary btn-sm">
-
-    <svg viewBox="0 0 24 24">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-
-    Create Invoice
-
-</a>
-
-{% endblock %}
-
-
 {% block content %}
 
-<div class="card">
+<div class="page-header">
 
-    <div class="card-header">
-        <span class="card-title">
-            Invoices
-        </span>
-    </div>
+    <h1>Invoices</h1>
 
-    <div style="padding: 2rem; text-align: center;">
-        <p style="color: var(--text-muted);">
-           Tenant Name: {{ request.session.get("tenant_name", "No Tenant") }}
-           {{ request.session.get("tenant_ntn") }}
-           {{ request.session.get("tenant_province") }}
-           {{ request.session.get("tenant_id") }}
-
-
-        </p>
-    </div>
+    <a
+        href="/invoices/invoice_form"
+        class="btn btn-primary"
+    >
+        + Create Invoice
+    </a>
 
 </div>
+
+
+<form
+    method="get"
+    class="invoice-filters"
+>
+
+    <label for="environment">
+        Environment
+    </label>
+
+    <select
+        id="environment"
+        name="environment"
+        onchange="this.form.submit()"
+    >
+
+        <option value="">
+            All
+        </option>
+
+        <option
+            value="sandbox"
+            {% if selected_environment == "sandbox" %}selected{% endif %}
+        >
+            Sandbox
+        </option>
+
+        <option
+            value="production"
+            {% if selected_environment == "production" %}selected{% endif %}
+        >
+            Production
+        </option>
+
+    </select>
+
+</form>
+
+
+<div class="invoice-list-card">
+
+    <table class="invoice-list-table">
+
+        <thead>
+
+            <tr>
+                <th>Invoice</th>
+                <th>Date</th>
+                <th>Buyer</th>
+                <th>Total</th>
+                <th>Environment</th>
+                <th>Status</th>
+                <th>FBR Invoice</th>
+                <th>Actions</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for invoice in invoices %}
+
+            <tr>
+
+                <td>
+                    <strong>
+                        {{ invoice.invoice_number }}
+                    </strong>
+                </td>
+
+
+                <td>
+                    {{ invoice.invoice_date }}
+                </td>
+
+
+                <td>
+                    {{ invoice.buyer_business_name }}
+                </td>
+
+
+                <td>
+                    {{ invoice.currency }}
+                    {{ "{:,.2f}".format(invoice.grand_total) }}
+                </td>
+
+
+                <td>
+                    {{ invoice.fbr_environment|capitalize }}
+                </td>
+
+
+                <td>
+
+                    <span
+                        class="status-badge status-{{ invoice.status }}"
+                    >
+                        {{ invoice.status|capitalize }}
+                    </span>
+
+                </td>
+
+
+                <td>
+                    {{ invoice.fbr_invoice_number or "—" }}
+                </td>
+
+
+                <td>
+
+                    <div class="invoice-row-actions">
+
+                        <a
+                            href="/invoices/{{ invoice.id }}"
+                            class="btn btn-secondary btn-sm"
+                        >
+                            Detail
+                        </a>
+
+                        {% if invoice.status == "accepted" %}
+
+                        <a
+                            href="/invoices/{{ invoice.id }}/print"
+                            target="_blank"
+                            class="btn btn-primary btn-sm"
+                        >
+                            Print
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+
+            {% else %}
+
+            <tr>
+
+                <td
+                    colspan="8"
+                    class="empty-state"
+                >
+                    No invoices found.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<style>
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+
+/* FILTERS */
+
+.invoice-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.invoice-filters label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.invoice-filters select {
+    min-width: 150px;
+}
+
+
+/* TABLE WRAPPER */
+
+.invoice-list-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+
+/* TABLE */
+
+.invoice-list-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-list-table th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.invoice-list-table td {
+    padding: 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.invoice-list-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ACTIONS */
+
+.invoice-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+
+/* EMPTY */
+
+.empty-state {
+    text-align: center;
+    padding: 30px !important;
+    color: var(--text-muted);
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+    .page-header {
+        align-items: flex-start;
+    }
+
+    .invoice-list-table {
+        min-width: 950px;
+    }
+
+}
+
+</style>
 
 {% endblock %}

@@ -8,9 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_db
 from models.tenant import Tenant
+
 from services.fbr_invoice_service import (
     FBRSubmissionError,
     submit_invoice,
+)
+
+from services.invoice_service import (
+    create_invoice,
+    mark_invoice_accepted,
+    mark_invoice_failed,
 )
 
 
@@ -25,25 +32,13 @@ async def submit_invoice_route(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """
-    Submit an invoice to FBR.
-
-    Current responsibility:
-        1. Read tenant_id from session
-        2. Load tenant from database
-        3. Read invoice JSON payload
-        4. Submit invoice to FBR
-        5. Return normalized FBR response
-
-    Database persistence will be added after invoice_service.py
-    is implemented.
-    """
 
     # -----------------------------------------------------
     # 1. AUTH / TENANT
     # -----------------------------------------------------
 
     tenant_id = request.session.get("tenant_id")
+    user_id = request.session.get("user_id")
 
     if not tenant_id:
         return JSONResponse(
@@ -65,6 +60,14 @@ async def submit_invoice_route(
             },
         )
 
+    user_uuid = None
+
+    if user_id:
+        try:
+            user_uuid = uuid.UUID(str(user_id))
+        except ValueError:
+            pass
+
     result = await db.execute(
         select(Tenant).where(
             Tenant.id == tenant_uuid,
@@ -84,7 +87,7 @@ async def submit_invoice_route(
         )
 
     # -----------------------------------------------------
-    # 2. READ INVOICE PAYLOAD
+    # 2. READ PAYLOAD
     # -----------------------------------------------------
 
     try:
@@ -107,26 +110,104 @@ async def submit_invoice_route(
             },
         )
 
+    # Make a copy because we don't want environment
+    # included in the FBR payload.
+    payload = payload.copy()
+
     environment = payload.pop(
-    "environment",
-    "sandbox",
-)
+        "environment",
+        "sandbox",
+    )
+
+    invoice_number = payload.pop(
+        "invoiceNumber",
+        None,
+            )
+
+    if environment not in {
+        "sandbox",
+        "production",
+    }:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Invalid FBR environment.",
+            },
+        )
+
+    
+
+    if not invoice_number:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Invoice number is required.",
+            },
+        )
+
     # -----------------------------------------------------
-    # 3. SUBMIT TO FBR
+    # 3. SAVE LOCALLY FIRST
     # -----------------------------------------------------
 
     try:
+        invoice = await create_invoice(
+            db=db,
+            tenant_id=tenant_uuid,
+            user_id=user_uuid,
+            payload=payload,
+            environment=environment,
+            invoice_number=invoice_number,
+            
+        )
+
+    except Exception as exc:
+        await db.rollback()
+
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "message": "Could not save invoice locally.",
+                "error": str(exc),
+            },
+        )
+
+    # -----------------------------------------------------
+    # 4. SUBMIT TO FBR
+    # -----------------------------------------------------
+
+    print("========== CLEAN FBR PAYLOAD ==========")
+    print(payload)
+    print("=======================================")
+
+    try:
         fbr_result = await submit_invoice(
-        tenant=tenant,
-        payload=payload,
-        environment=environment,
-    )
+            tenant=tenant,
+            payload=payload,
+            environment=environment,
+        )
 
     except FBRSubmissionError as exc:
+
+        await mark_invoice_failed(
+            db=db,
+            invoice=invoice,
+            error=exc,
+        )
+
         return JSONResponse(
             status_code=422,
             content={
                 "success": False,
+
+                # Our invoice still exists
+                "invoice_id": str(invoice.id),
+                "invoice_number": invoice.invoice_number,
+
+                "status": invoice.status,
+
                 "message": exc.message,
                 "fbr_error_code": exc.error_code,
                 "fbr_http_status": exc.status_code,
@@ -135,19 +216,50 @@ async def submit_invoice_route(
         )
 
     # -----------------------------------------------------
-    # 4. SUCCESS
+    # 5. SAVE FBR SUCCESS
+    # -----------------------------------------------------
+
+    await mark_invoice_accepted(
+        db=db,
+        invoice=invoice,
+        fbr_result=fbr_result,
+    )
+
+    # -----------------------------------------------------
+    # 6. RETURN SUCCESS
     # -----------------------------------------------------
 
     return JSONResponse(
         status_code=200,
         content={
             "success": True,
-            "message": "Invoice submitted successfully to FBR.",
-            "invoice_number": fbr_result.invoice_number,
+            "message": (
+                "Invoice submitted successfully to FBR."
+            ),
+
+            # Our invoice
+            "invoice_id": str(invoice.id),
+            "invoice_number": invoice.invoice_number,
+
+            # FBR invoice
+            "fbr_invoice_number": (
+                fbr_result.invoice_number
+            ),
+
             "dated": fbr_result.dated,
-            "status": fbr_result.status,
-            "status_code": fbr_result.status_code,
-            "item_statuses": fbr_result.item_statuses,
-            "fbr_response": fbr_result.raw_response,
+            "status": invoice.status,
+
+            "fbr_status": fbr_result.status,
+            "fbr_status_code": (
+                fbr_result.status_code
+            ),
+
+            "item_statuses": (
+                fbr_result.item_statuses
+            ),
+
+            "fbr_response": (
+                fbr_result.raw_response
+            ),
         },
     )

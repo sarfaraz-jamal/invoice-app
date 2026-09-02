@@ -584,6 +584,23 @@
 
             </div>
 
+            <div class="field">
+
+              <label>
+                Invoice Number
+                <span class="req">*</span>
+              </label>
+
+              <input
+                type="text"
+                name="invoiceNumber"
+                id="invoiceNumber"
+                placeholder="e.g. INV-045"
+                required
+              >
+
+            </div>
+
 
             <div class="field">
 
@@ -3541,6 +3558,9 @@ async function loadSroItems(item) {
           environment:
             $("#environment").value,
 
+          invoiceNumber:
+            $("#invoiceNumber").value.trim(),
+
           invoiceType:
             $("#invoiceType").value,
 
@@ -3758,7 +3778,10 @@ async function loadSroItems(item) {
           }
 
         }
-
+        console.log(
+          "Invoice number field:",
+          $("#invoiceNumber")?.value
+        );
 
         console.log(
           "FBR payload:",

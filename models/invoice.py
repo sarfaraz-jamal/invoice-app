@@ -3,6 +3,7 @@
 import uuid
 from decimal import Decimal
 from datetime import date, datetime
+from sqlalchemy.dialects.postgresql import JSONB
 
 from sqlalchemy import (
     String,
@@ -46,20 +47,6 @@ class Invoice(Base):
         UUID(as_uuid=True),
         ForeignKey("tenants.id"),
         nullable=False,
-        index=True,
-    )
-
-    branch_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("branches.id"),
-        nullable=True,
-        index=True,
-    )
-
-    customer_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("customers.id"),
-        nullable=True,
         index=True,
     )
 
@@ -201,6 +188,26 @@ class Invoice(Base):
     # FBR sync status
     # =========================
 
+    fbr_environment: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
+
+    fbr_request_payload: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+
+    fbr_response_payload: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+
+    qr_data: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
@@ -339,13 +346,6 @@ class InvoiceItem(Base):
             ondelete="CASCADE",
         ),
         nullable=False,
-        index=True,
-    )
-
-    product_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("products.id"),
-        nullable=True,
         index=True,
     )
 
